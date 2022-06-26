@@ -8,3 +8,9 @@ pub struct KNN<Point> {
     set: Set<Point>,
     edges: Vec<(Point, Point)>,
 }
+
+impl<Point> KNN<Point> {
+    fn new(set: Set<Point>) -> Self {
+        return KNN { set, edges: vec![] };
+    }
+}
