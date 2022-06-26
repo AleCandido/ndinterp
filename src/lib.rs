@@ -1,3 +1,6 @@
+pub mod grid;
+pub mod scatter;
+
 #[cfg(test)]
 mod tests {
     #[test]
