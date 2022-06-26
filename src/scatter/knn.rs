@@ -1,34 +1,10 @@
-pub struct Set<Point> {
-    points: Vec<Point>,
-    dist: fn(Point, Point) -> f64,
-}
+//! Utilities to find K-nearest neighbors.
+//!
+//! To be used as part of a generic scattered interpolation algorithm.
 
-impl<Point> Set<Point> {
-    pub fn new(points: Vec<Point>, dist: fn(Point, Point) -> f64) -> Self {
-        Set { points, dist }
-    }
-
-    pub fn distance(&self, a: Point, b: Point) -> f64 {
-        (self.dist)(a, b)
-    }
-}
+use super::set::Set;
 
 pub struct KNN<Point> {
     set: Set<Point>,
     edges: Vec<(Point, Point)>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn set_test() {
-        let s = Set {
-            points: vec![0., 1., 2.],
-            dist: |a: f64, b| (a - b).abs(),
-        };
-
-        assert_eq!(s.distance(s.points[0], s.points[1]), 1.)
-    }
 }
