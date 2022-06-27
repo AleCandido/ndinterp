@@ -9,6 +9,9 @@ readme = "README.md"
 categories = ["science"]
 description = "N-dimensional interpolation library - python interface"
 
+[lib]
+name = "ndinterp"
+crate-type = ["cdylib"]
 
 [dependencies]
 ndinterp = { path = "../ndinterp" }

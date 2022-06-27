@@ -1,0 +1,27 @@
+[project]
+name = "ndinterp"
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Natural Language :: English",
+  "Programming Language :: Python",
+  "Programming Language :: Rust",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+docs = ["sphinx", "sphinxcontrib-bibtex"]
+test = ["pytest", "pytest-cov"]
+
+[tool.maturin]
+bindings = "pyo3"
+strip = true
+
+[tool.pytest.ini_options]
+testpaths = ['tests/']
+addopts = [
+  '--cov=ndinterp',
+  '--cov-report=html',
+  '--cov-report=xml',
+  '--strict-markers',
+]
