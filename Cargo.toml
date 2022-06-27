@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["ndinterp"]
+members = ["ndinterp", "ndinterp_py"]
