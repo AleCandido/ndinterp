@@ -7,4 +7,4 @@
 //! the implemented algorithms).
 
 pub mod knn;
-pub mod set;
+pub mod metric;
