@@ -16,3 +16,5 @@ crate-type = ["cdylib"]
 [dependencies]
 ndinterp = { path = "../ndinterp" }
 pyo3 = { features = ["extension-module"], version = "0.16.4" }
+ndarray = "0.15.4"
+numpy = "0.16.2"
