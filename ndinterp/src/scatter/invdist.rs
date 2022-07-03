@@ -1,7 +1,10 @@
-use super::knn::{All, HNSW, KNN};
+use super::{
+    knn::{All, HNSW, KNN},
+    utils::split_2d,
+};
 use crate::{interpolate::Interpolate, metric::Metric};
 
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2};
 
 pub struct InvDistBase<Point, Finder>
 where
@@ -34,14 +37,10 @@ where
     Finder: KNN<Point = Array1<f64>>,
 {
     pub fn from_array(points: Array2<f64>, knn: Finder) -> Self {
-        let values = points.outer_iter().map(|ar| ar[ar.len() - 1]).collect();
+        let (points, values) = split_2d(points);
 
         Self {
-            points: points
-                .slice(s![.., ..-1])
-                .outer_iter()
-                .map(|ar| ar.to_owned())
-                .collect(),
+            points,
             values,
             knn,
         }
