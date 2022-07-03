@@ -12,25 +12,25 @@ pub trait KNN {
     fn neighbors(&self, query: &Self::Point) -> Vec<usize>;
 }
 
-pub struct All<Point> {
+pub struct All<'a, Point> {
     identifiers: Vec<usize>,
-    points: Vec<Point>,
+    points: Vec<&'a Point>,
 }
 
-impl<Point> All<Point> {
-    pub fn new(points: Vec<(usize, Point)>) -> Self {
+impl<'a, Point> All<'a, Point> {
+    pub fn new(points: Vec<(usize, &'a Point)>) -> Self {
         Self {
             identifiers: points.iter().map(|e| e.0).collect(),
             points: points.into_iter().map(|e| e.1).collect(),
         }
     }
 
-    pub fn points(&self) -> &Vec<Point> {
+    pub fn points(&self) -> &Vec<&Point> {
         &self.points
     }
 }
 
-impl<Point> KNN for All<Point> {
+impl<'a, Point> KNN for All<'a, Point> {
     type Point = Point;
 
     fn neighbors(&self, _: &Point) -> Vec<usize> {
@@ -38,16 +38,16 @@ impl<Point> KNN for All<Point> {
     }
 }
 
-pub struct HNSW<Point: Metric> {
+pub struct HNSW<'a, Point: Metric> {
     k: u32,
-    graph: UnGraph<(usize, Point), f64>,
+    graph: UnGraph<(usize, &'a Point), f64>,
 }
 
-impl<Point: Metric> HNSW<Point> {
+impl<'a, Point: Metric> HNSW<'a, Point> {
     pub fn new(k: u32) -> Self {
         return HNSW {
             k,
-            graph: UnGraph::<(usize, Point), f64>::new_undirected(),
+            graph: UnGraph::<(usize, &Point), f64>::new_undirected(),
         };
     }
 
@@ -56,7 +56,7 @@ impl<Point: Metric> HNSW<Point> {
     }
 }
 
-impl<Point: Metric + Clone> KNN for HNSW<Point> {
+impl<'a, Point: Metric + Clone> KNN for HNSW<'a, Point> {
     type Point = Point;
 
     fn neighbors(&self, _query: &Point) -> Vec<usize> {
