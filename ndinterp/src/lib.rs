@@ -2,4 +2,5 @@
 
 pub mod grid;
 pub mod interpolate;
+pub mod metric;
 pub mod scatter;

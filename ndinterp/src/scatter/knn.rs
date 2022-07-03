@@ -1,12 +1,14 @@
 //! Utilities to find K-nearest neighbors.
 //!
 //! To be used as part of a generic scattered interpolation algorithm.
-use super::metric::Metric;
+use crate::metric::Metric;
 
 use petgraph::graph::UnGraph;
 
-pub trait KNN<Point> {
-    fn neighbors(&self, query: &Point) -> Vec<Point>;
+pub trait KNN {
+    type Point;
+
+    fn neighbors(&self, query: &Self::Point) -> Vec<Self::Point>;
 }
 
 pub struct All<Point: Clone> {
@@ -19,7 +21,9 @@ impl<Point: Clone> All<Point> {
     }
 }
 
-impl<Point: Clone> KNN<Point> for All<Point> {
+impl<Point: Clone> KNN for All<Point> {
+    type Point = Point;
+
     fn neighbors(&self, _: &Point) -> Vec<Point> {
         self.points.clone()
     }
@@ -43,7 +47,9 @@ impl<Point: Metric> HNSW<Point> {
     }
 }
 
-impl<Point: Metric + Clone> KNN<Point> for HNSW<Point> {
+impl<Point: Metric + Clone> KNN for HNSW<Point> {
+    type Point = Point;
+
     fn neighbors(&self, _query: &Point) -> Vec<Point> {
         self.graph
             .raw_nodes()

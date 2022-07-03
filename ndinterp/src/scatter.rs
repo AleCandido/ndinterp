@@ -8,4 +8,3 @@
 
 pub mod invdist;
 pub mod knn;
-pub mod metric;
