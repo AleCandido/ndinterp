@@ -6,5 +6,6 @@
 //! you want to use for something, take care of differences, possibly not properly accounted for by
 //! the implemented algorithms).
 
+pub mod invdist;
 pub mod knn;
 pub mod metric;

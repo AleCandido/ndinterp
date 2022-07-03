@@ -1,10 +1,9 @@
 //! Utilities to find K-nearest neighbors.
 //!
 //! To be used as part of a generic scattered interpolation algorithm.
+use super::metric::Metric;
 
 use petgraph::graph::UnGraph;
-
-use super::metric::Metric;
 
 pub trait KNN<Point> {
     fn neighbors(&self, x: Point) -> Vec<Point>;
