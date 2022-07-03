@@ -12,5 +12,4 @@ description = "N-dimensional interpolation library"
 [dependencies]
 ndarray = "0.15.4"
 ndarray-linalg = "0.14.1"
-hashbrown = "0.12.1"
 petgraph = "0.6.2"

@@ -8,37 +8,46 @@ use petgraph::graph::UnGraph;
 pub trait KNN {
     type Point;
 
-    fn neighbors(&self, query: &Self::Point) -> Vec<Self::Point>;
+    // Returns points identifiers
+    fn neighbors(&self, query: &Self::Point) -> Vec<usize>;
 }
 
-pub struct All<Point: Clone> {
+pub struct All<Point> {
+    identifiers: Vec<usize>,
     points: Vec<Point>,
 }
 
-impl<Point: Clone> All<Point> {
-    pub fn new(points: Vec<Point>) -> Self {
-        Self { points }
+impl<Point> All<Point> {
+    pub fn new(points: Vec<(usize, Point)>) -> Self {
+        Self {
+            identifiers: points.iter().map(|e| e.0).collect(),
+            points: points.into_iter().map(|e| e.1).collect(),
+        }
+    }
+
+    pub fn points(&self) -> &Vec<Point> {
+        &self.points
     }
 }
 
-impl<Point: Clone> KNN for All<Point> {
+impl<Point> KNN for All<Point> {
     type Point = Point;
 
-    fn neighbors(&self, _: &Point) -> Vec<Point> {
-        self.points.clone()
+    fn neighbors(&self, _: &Point) -> Vec<usize> {
+        self.identifiers.clone()
     }
 }
 
 pub struct HNSW<Point: Metric> {
     k: u32,
-    graph: UnGraph<Point, f64>,
+    graph: UnGraph<(usize, Point), f64>,
 }
 
 impl<Point: Metric> HNSW<Point> {
     pub fn new(k: u32) -> Self {
         return HNSW {
             k,
-            graph: UnGraph::<Point, f64>::new_undirected(),
+            graph: UnGraph::<(usize, Point), f64>::new_undirected(),
         };
     }
 
@@ -50,12 +59,8 @@ impl<Point: Metric> HNSW<Point> {
 impl<Point: Metric + Clone> KNN for HNSW<Point> {
     type Point = Point;
 
-    fn neighbors(&self, _query: &Point) -> Vec<Point> {
-        self.graph
-            .raw_nodes()
-            .iter()
-            .map(|n| n.weight.clone())
-            .collect()
+    fn neighbors(&self, _query: &Point) -> Vec<usize> {
+        self.graph.raw_nodes().iter().map(|n| n.weight.0).collect()
     }
 }
 
@@ -67,6 +72,6 @@ mod tests {
     fn test_all() {
         let all = All::<f64>::new(vec![]);
 
-        assert_eq!(all.neighbors(10.).len(), 0);
+        assert_eq!(all.neighbors(&10.).len(), 0);
     }
 }

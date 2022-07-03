@@ -1,17 +1,15 @@
 use super::knn::{All, HNSW, KNN};
 use crate::{interpolate::Interpolate, metric::Metric};
 
-use hashbrown::HashMap;
-use ndarray::Array1;
-
-use std::{cmp::Eq, hash::Hash};
+use ndarray::{s, Array1, Array2};
 
 pub struct InvDistBase<Point, Finder>
 where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    values: HashMap<Point, f64>,
+    points: Vec<Point>,
+    values: Vec<f64>,
     knn: Finder,
 }
 
@@ -20,14 +18,39 @@ where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    pub fn new(values: HashMap<Point, f64>, knn: Finder) -> Self {
-        Self { values, knn }
+    pub fn new(points: Vec<(Point, f64)>, knn: Finder) -> Self {
+        let values = points.iter().map(|p| p.1).collect();
+
+        Self {
+            points: points.into_iter().map(|p| p.0).collect(),
+            values,
+            knn,
+        }
+    }
+}
+
+impl<Finder> InvDistBase<Array1<f64>, Finder>
+where
+    Finder: KNN<Point = Array1<f64>>,
+{
+    pub fn from_array(points: Array2<f64>, knn: Finder) -> Self {
+        let values = points.outer_iter().map(|ar| ar[ar.len() - 1]).collect();
+
+        Self {
+            points: points
+                .slice(s![.., ..-1])
+                .outer_iter()
+                .map(|ar| ar.to_owned())
+                .collect(),
+            values,
+            knn,
+        }
     }
 }
 
 impl<Point, Finder> Interpolate for InvDistBase<Point, Finder>
 where
-    Point: Metric + Hash + Eq,
+    Point: Metric,
     Finder: KNN<Point = Point>,
 {
     type Point = Point;
@@ -36,16 +59,16 @@ where
         let mut value = 0.;
         let mut norm = 0.;
 
-        for n in self.knn.neighbors(&(query)) {
-            let dist = Point::distance(query, &n);
-            let nvalue = self.values.get(&n).unwrap().clone();
+        for nb_id in self.knn.neighbors(&(query)) {
+            let dist = Point::distance(query, &self.points[nb_id]);
+            let nb_value = self.values[nb_id];
 
             // In case of distance too close, early return the exact value
             if dist < 1e-10 {
-                return nvalue;
+                return nb_value;
             }
 
-            value += nvalue / dist;
+            value += nb_value / dist;
             norm += 1. / dist;
         }
 
