@@ -5,6 +5,8 @@ use crate::metric::Metric;
 
 use petgraph::graph::UnGraph;
 
+use std::rc::{Rc, Weak};
+
 pub trait KNN {
     type Point;
 
@@ -14,18 +16,18 @@ pub trait KNN {
 
 pub struct All<Point> {
     identifiers: Vec<usize>,
-    points: Vec<Point>,
+    points: Vec<Weak<Point>>,
 }
 
 impl<Point> All<Point> {
-    pub fn new(points: Vec<(usize, Point)>) -> Self {
+    pub fn new(points: Vec<(usize, Rc<Point>)>) -> Self {
         Self {
             identifiers: points.iter().map(|e| e.0).collect(),
-            points: points.into_iter().map(|e| e.1).collect(),
+            points: points.into_iter().map(|e| Rc::downgrade(&e.1)).collect(),
         }
     }
 
-    pub fn points(&self) -> &Vec<Point> {
+    pub fn points(&self) -> &Vec<Weak<Point>> {
         &self.points
     }
 }
@@ -40,14 +42,14 @@ impl<Point> KNN for All<Point> {
 
 pub struct HNSW<Point: Metric> {
     k: u32,
-    graph: UnGraph<(usize, Point), f64>,
+    graph: UnGraph<(usize, Weak<Point>), f64>,
 }
 
 impl<Point: Metric> HNSW<Point> {
     pub fn new(k: u32) -> Self {
         return HNSW {
             k,
-            graph: UnGraph::<(usize, Point), f64>::new_undirected(),
+            graph: UnGraph::<(usize, Weak<Point>), f64>::new_undirected(),
         };
     }
 
