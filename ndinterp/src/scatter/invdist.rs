@@ -1,8 +1,11 @@
 use super::{
+    commons::Commons,
     knn::{All, HNSW, KNN},
-    utils::split_2d,
 };
-use crate::{interpolate::Interpolate, metric::Metric};
+use crate::{
+    interpolate::{Input, Interpolate},
+    metric::Metric,
+};
 
 use ndarray::{Array1, Array2};
 
@@ -11,9 +14,7 @@ where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    points: Vec<Point>,
-    values: Vec<f64>,
-    finder: Option<Finder>,
+    commons: Commons<Point, Finder>,
 }
 
 impl<Point, Finder> InvDistBase<Point, Finder>
@@ -21,18 +22,14 @@ where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    pub fn new(points: Vec<(Point, f64)>) -> Self {
-        let values = points.iter().map(|p| p.1).collect();
-
+    pub fn new(inputs: Vec<Input<Point>>) -> Self {
         Self {
-            points: points.into_iter().map(|p| p.0).collect(),
-            values,
-            finder: None,
+            commons: Commons::new(inputs),
         }
     }
 
     pub fn set_finder(&mut self, finder: Finder) {
-        self.finder = Some(finder);
+        self.commons.set_finder(finder)
     }
 }
 
