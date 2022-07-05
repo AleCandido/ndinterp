@@ -78,5 +78,5 @@ where
     }
 }
 
-pub type InvDistAll<'a> = InvDistBase<Array1<f64>, All<'a, Array1<f64>>>;
-pub type InvDist<'a> = InvDistBase<Array1<f64>, HNSW<'a, Array1<f64>>>;
+pub type InvDistAll = InvDistBase<Array1<f64>, All<Array1<f64>>>;
+pub type InvDist = InvDistBase<Array1<f64>, HNSW<Array1<f64>>>;
