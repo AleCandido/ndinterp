@@ -1,4 +1,4 @@
-use std::{iter::zip, rc::Rc};
+use std::rc::Rc;
 
 use ndarray::{s, Array1, Array2};
 
@@ -10,9 +10,9 @@ where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    points: Rc<Vec<Point>>,
-    values: Vec<f64>,
-    finder: Option<Finder>,
+    pub(crate) points: Rc<Vec<Point>>,
+    pub(crate) values: Vec<f64>,
+    pub(crate) finder: Option<Finder>,
 }
 
 impl<Point, Finder> Commons<Point, Finder>
@@ -53,10 +53,6 @@ where
 {
     fn from(inputs: Array2<f64>) -> Self {
         let (points, values) = split_2d(inputs);
-        Self::new(
-            zip(points.into_iter(), values.into_iter())
-                .map(|t| t.into())
-                .collect(),
-        )
+        Self::new(Input::stack(points, values))
     }
 }

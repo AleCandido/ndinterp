@@ -33,17 +33,13 @@ where
     }
 }
 
-impl<Finder> InvDistBase<Array1<f64>, Finder>
+impl<Finder> From<Array2<f64>> for InvDistBase<Array1<f64>, Finder>
 where
     Finder: KNN<Point = Array1<f64>>,
 {
-    pub fn from_array(points: Array2<f64>) -> Self {
-        let (points, values) = split_2d(points);
-
+    fn from(inputs: Array2<f64>) -> Self {
         Self {
-            points,
-            values,
-            finder: None,
+            commons: inputs.into(),
         }
     }
 }
@@ -60,13 +56,14 @@ where
         let mut norm = 0.;
 
         for nb_id in self
+            .commons
             .finder
             .as_ref()
             .expect("Finder not set.")
             .neighbors(&(query))
         {
-            let dist = Point::distance(query, &self.points[nb_id]);
-            let nb_value = self.values[nb_id];
+            let dist = Point::distance(query, &self.commons.points[nb_id]);
+            let nb_value = self.commons.values[nb_id];
 
             // In case of distance too close, early return the exact value
             if dist < 1e-10 {
@@ -83,20 +80,3 @@ where
 
 pub type InvDistAll<'a> = InvDistBase<Array1<f64>, All<'a, Array1<f64>>>;
 pub type InvDist<'a> = InvDistBase<Array1<f64>, HNSW<'a, Array1<f64>>>;
-
-impl<'a> InvDistBase<Array1<f64>, All<'a, Array1<f64>>> {
-    fn from_points(points: Vec<(Array1<f64>, f64)>) -> Self {
-        let mut inv_dist = Self::new(points);
-        let all = All::<Array1<f64>>::new(
-            inv_dist
-                .points
-                .iter()
-                .enumerate()
-                .collect::<Vec<(usize, &Array1<f64>)>>(),
-        );
-
-        inv_dist.set_finder(all);
-
-        inv_dist
-    }
-}

@@ -1,3 +1,5 @@
+use std::iter::zip;
+
 use crate::metric::Metric;
 
 pub trait Interpolate {
@@ -17,5 +19,13 @@ impl<Point: Metric> From<(Point, f64)> for Input<Point> {
             point: item.0,
             value: item.1,
         }
+    }
+}
+
+impl<Point: Metric> Input<Point> {
+    pub fn stack(points: Vec<Point>, values: Vec<f64>) -> Vec<Self> {
+        zip(points.into_iter(), values.into_iter())
+            .map(|t| t.into())
+            .collect()
     }
 }
