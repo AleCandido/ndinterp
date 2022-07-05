@@ -10,7 +10,7 @@ where
     Point: Metric,
     Finder: KNN<Point = Point>,
 {
-    pub(crate) points: Rc<Vec<Point>>,
+    pub(crate) points: Vec<Rc<Point>>,
     pub(crate) values: Vec<f64>,
     pub(crate) finder: Option<Finder>,
 }
@@ -22,7 +22,7 @@ where
 {
     pub fn new(inputs: Vec<Input<Point>>) -> Self {
         let values = inputs.iter().map(|i| i.value).collect();
-        let points = Rc::new(inputs.into_iter().map(|i| i.point).collect());
+        let points = inputs.into_iter().map(|i| Rc::new(i.point)).collect();
 
         Self {
             points,
