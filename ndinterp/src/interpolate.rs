@@ -2,6 +2,11 @@ use std::iter::zip;
 
 use crate::metric::Metric;
 
+pub trait Interpolator<T> {
+    fn interpolate(&self, query: T) -> f64;
+}
+
+/// ---- deal with the stuff below later ----
 pub trait Interpolate {
     type Point: Metric;
 
