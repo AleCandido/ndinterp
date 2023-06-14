@@ -2,9 +2,9 @@
 /// perform alpha_s(q) interpolation.
 /// The example values in this file have been obtained with LHAPDF6 for NNPDF40_nnlo_as_01180
 use ndarray::array;
-use ndinterp::grid::Grid;
 
 use ndinterp::grid::cubic::{Cubic1d, Interpolator};
+use ndinterp::grid::Grid;
 
 fn main() {
     println!("Testing 1d cubic interpolation: alpha_s(Q)");
