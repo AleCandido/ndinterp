@@ -9,7 +9,7 @@
 //! Several algorithms are provided to compute then the function
 //!     y = f(x1, x2, x3...)
 //!
-
+use crate::interpolate::InterpolationError;
 use ndarray::Array1;
 
 // Make public the families of interpolation algorithms implemented for grids
@@ -51,11 +51,17 @@ impl Grid {
     }
 
     /// Find the index of the last value in the input such that input(idx) < query
-    pub fn closest_below(&self, query: f64) -> usize {
-        // TODO: what do we do (with a drunken caller) when query > max(input) or query < min(input) ??
-        let u_idx = self.input.iter().position(|x| x > &query).unwrap();
-        let idx = u_idx - 1;
-        return idx;
+    /// If the query is outside the grid returns an extrapolation error
+    pub fn closest_below(&self, query: f64) -> Result<usize, InterpolationError> {
+        if query > self.input[self.input.len() - 1] {
+            Err(InterpolationError::ExtrapolationAbove(query))
+        } else if query < self.input[0] {
+            Err(InterpolationError::ExtrapolationBelow(query))
+        } else {
+            let u_idx = self.input.iter().position(|x| x > &query).unwrap();
+            let idx = u_idx - 1;
+            Ok(idx)
+        }
     }
 }
 
@@ -84,8 +90,7 @@ mod tests {
     #[test]
     fn check_index_search() {
         let grid = gen_grid();
-
-        assert_eq!(grid.closest_below(0.5), 0);
-        assert_eq!(grid.closest_below(3.2), 3);
+        assert_eq!(grid.closest_below(0.5).unwrap(), 0);
+        assert_eq!(grid.closest_below(3.2).unwrap(), 3);
     }
 }

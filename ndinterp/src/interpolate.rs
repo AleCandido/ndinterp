@@ -1,9 +1,19 @@
 use std::iter::zip;
+use thiserror::Error;
 
 use crate::metric::Metric;
 
+#[derive(Debug, Error)]
+pub enum InterpolationError {
+    #[error("The value queried ({0}) is above the maximum")]
+    ExtrapolationAbove(f64),
+
+    #[error("The value queried ({0}) is below the minimum")]
+    ExtrapolationBelow(f64),
+}
+
 pub trait Interpolator<T> {
-    fn interpolate(&self, query: T) -> f64;
+    fn interpolate(&self, query: T) -> Result<f64, InterpolationError>;
 }
 
 /// ---- deal with the stuff below later ----

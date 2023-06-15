@@ -6,10 +6,12 @@
 /// 1. Interpolation between the first two bins (1.7)
 /// 2. Interpolation in the region between the second and next-to-last bin
 /// 3. Interpolation between the last two bins (4.5)
+/// 4. Extrapolation above and below (results in an error!)
 use ndarray::array;
 
 use ndinterp::grid::cubic::{Cubic1d, Interpolator};
 use ndinterp::grid::Grid;
+use ndinterp::interpolate::InterpolationError;
 
 fn main() {
     println!("Testing 1d cubic interpolation: alpha_s(Q)");
@@ -44,18 +46,25 @@ fn main() {
 
     let cubic_interpolator = Cubic1d { grid };
 
-    let example_q: Vec<f64> = vec![1.7, 1.8, 2.6, 3.4, 4.1, 4.5];
+    let example_q: Vec<f64> = vec![1.7, 1.8, 2.6, 3.4, 4.1, 4.5, 10.0, 1.0];
     let lhapdf_res = vec![
-        0.32580476, 0.31652747, 0.26841305, 0.24201896, 0.22660515, 0.21978229,
+        0.32580476, 0.31652747, 0.26841305, 0.24201896, 0.22660515, 0.21978229, 0.0, 1.0,
     ];
     for (i, qval) in example_q.iter().enumerate() {
         let q2val = qval.powf(2.0);
         let lq2 = f64::ln(q2val);
-        let vpol = cubic_interpolator.interpolate(lq2);
-
-        println!(
-            "Interpolated value: alpha_s({}) = {:.4} (lhapdf = {:.4})",
-            qval, vpol, lhapdf_res[i]
-        );
+        match cubic_interpolator.interpolate(lq2) {
+            Ok(vpol) => println!(
+                "Interpolated value: alpha_s({}) = {:.4} (lhapdf = {:.4})",
+                qval, vpol, lhapdf_res[i]
+            ),
+            Err(error) => {
+                if let InterpolationError::ExtrapolationAbove(_) = error {
+                    eprintln!("Extrapolating for Q>Qmax: {}", error);
+                } else if let InterpolationError::ExtrapolationBelow(_) = error {
+                    eprintln!("Extrapolating for Q<Qmin: {}", error);
+                }
+            }
+        }
     }
 }

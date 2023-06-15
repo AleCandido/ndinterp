@@ -16,6 +16,8 @@ pub use crate::interpolate::Interpolator;
 /// with hij the Hermite basis functions
 ///
 ///
+use crate::interpolate::InterpolationError;
+
 #[derive(Debug)]
 pub struct Cubic1d {
     pub grid: Grid,
@@ -25,10 +27,19 @@ impl Interpolator<f64> for Cubic1d {
     /// Use Cubic interpolation 1d to compute y(query)
     /// The interpolation uses the two nearest neighbours and their derivatives computed as an
     /// average of the differences above and below.
+    ///
+    /// Special cases are considered when the interpolation occurs between the first (last) two
+    /// bins, where the derivative would involve points outside the grids.
+    ///
     /// Two special are considered, when the interpolation occurs between the first (last) two
     /// bins, the derivative at the boundary is approximated by the forward (backward) difference
-    fn interpolate(&self, query: f64) -> f64 {
-        let idx = self.grid.closest_below(query);
+    fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
+        let idx_raw = self.grid.closest_below(query);
+
+        let idx = match idx_raw {
+            Ok(val) => val,
+            Err(e) => return Err(e), // Not our problem
+        };
 
         let dx = self.grid.input[idx + 1] - self.grid.input[idx];
 
@@ -57,6 +68,6 @@ impl Interpolator<f64> for Cubic1d {
         let m0 = dydxl * (t3 - 2. * t2 + t);
         let m1 = dydxu * (t3 - t2);
 
-        return p0 + p1 + m0 + m1;
+        return Ok(p0 + p1 + m0 + m1);
     }
 }
