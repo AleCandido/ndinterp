@@ -1,5 +1,6 @@
 ///! Implements cubic interpolation algorithms
 use crate::grid::Grid;
+use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
 
 /// Cubic interpolation in 1D
@@ -16,7 +17,6 @@ pub use crate::interpolate::Interpolator;
 /// with hij the Hermite basis functions
 ///
 ///
-use crate::interpolate::InterpolationError;
 
 #[derive(Debug)]
 pub struct Cubic1d {
@@ -34,13 +34,7 @@ impl Interpolator<f64> for Cubic1d {
     /// Two special are considered, when the interpolation occurs between the first (last) two
     /// bins, the derivative at the boundary is approximated by the forward (backward) difference
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
-        let idx_raw = self.grid.closest_below(query);
-
-        let idx = match idx_raw {
-            Ok(val) => val,
-            Err(e) => return Err(e), // Not our problem
-        };
-
+        let idx = self.grid.closest_below(query)?;
         let dx = self.grid.input[idx + 1] - self.grid.input[idx];
 
         // Upper and lower bounds and derivatives
