@@ -1,6 +1,11 @@
 /// In this example we utilize the cubic_1d interpolation implemented for the Grid struct to
 /// perform alpha_s(q) interpolation.
 /// The example values in this file have been obtained with LHAPDF6 for NNPDF40_nnlo_as_01180
+///
+/// The numbers tested cover the following situations:
+/// 1. Interpolation between the first two bins (1.7)
+/// 2. Interpolation in the region between the second and next-to-last bin
+/// 3. Interpolation between the last two bins (4.5)
 use ndarray::array;
 
 use ndinterp::grid::cubic::{Cubic1d, Interpolator};
@@ -39,8 +44,10 @@ fn main() {
 
     let cubic_interpolator = Cubic1d { grid };
 
-    let example_q: Vec<f64> = vec![1.8, 2.6, 3.4, 4.1];
-    let lhapdf_res = vec![0.31652747, 0.26841305, 0.24201896, 0.22660515];
+    let example_q: Vec<f64> = vec![1.7, 1.8, 2.6, 3.4, 4.1, 4.5];
+    let lhapdf_res = vec![
+        0.32580476, 0.31652747, 0.26841305, 0.24201896, 0.22660515, 0.21978229,
+    ];
     for (i, qval) in example_q.iter().enumerate() {
         let q2val = qval.powf(2.0);
         let lq2 = f64::ln(q2val);

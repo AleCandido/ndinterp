@@ -23,8 +23,12 @@ pub struct Cubic1d {
 
 impl Interpolator<f64> for Cubic1d {
     /// Use Cubic interpolation 1d to compute y(query)
+    /// The interpolation uses the two nearest neighbours and their derivatives computed as an
+    /// average of the differences above and below.
+    /// Two special are considered, when the interpolation occurs between the first (last) two
+    /// bins, the derivative at the boundary is approximated by the forward (backward) difference
     fn interpolate(&self, query: f64) -> f64 {
-        let idx = self.grid.index_of(query);
+        let idx = self.grid.closest_below(query);
 
         let dx = self.grid.input[idx + 1] - self.grid.input[idx];
 
@@ -32,8 +36,17 @@ impl Interpolator<f64> for Cubic1d {
         let yu = self.grid.values[idx + 1];
         let yl = self.grid.values[idx];
 
-        let dydxu = dx * self.grid.derivative_at(idx + 1);
-        let dydxl = dx * self.grid.derivative_at(idx);
+        let dydxu = if idx == self.grid.input.len() - 2 {
+            dx * self.grid.derivative_at(idx + 1)
+        } else {
+            dx * self.grid.central_derivative_at(idx + 1)
+        };
+
+        let dydxl = if idx == 0 {
+            dx * self.grid.derivative_at(idx + 1)
+        } else {
+            dx * self.grid.central_derivative_at(idx)
+        };
 
         let t = (query - self.grid.input[idx]) / dx;
         let t2 = t * t;
