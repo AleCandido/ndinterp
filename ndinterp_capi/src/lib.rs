@@ -1,9 +1,9 @@
+use ndarray::ArrayView1;
 /// C interface for ndinterp
-
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
-use ndarray::ArrayView1;
 
+pub struct Cubic1d;
 
 /// Creates a cubic1d interpolator given the nodes
 /// and the values of the function in said nodes
@@ -23,7 +23,6 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
     let cubic_interpolator = grid::cubic::Cubic1d { grid };
     return Box::new(cubic_interpolator);
 }
-
 
 /// Perform cubic1d interpolation in a previously generated interpolator
 ///

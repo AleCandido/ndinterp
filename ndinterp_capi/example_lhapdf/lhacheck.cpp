@@ -5,14 +5,7 @@
 #include <sstream>
 #include <chrono>
 #include "LHAPDF/LHAPDF.h"
-
-
-// For the time being the header is manual
-typedef struct cubic1d cubic1d;
-extern "C" {
-    cubic1d* create_cubic_interpolator1d(const double*, const double*, const size_t);
-    double interpolate_cubic_1d(cubic1d*, const double);
-}
+#include "ndinterp.h"
 
 
 std::vector<double> string_to_vector(const std::string& stri_raw) {
