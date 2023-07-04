@@ -47,7 +47,7 @@ int main() {
 
     cubic1d* my_grid = create_cubic_interpolator1d(q2s.data(), als.data(), q2s.size());
 
-    const int n = 1000000;
+    const int n = 10000000;
     const double qmin = 3.0;
     const double qmax = 100.0;
 
@@ -86,7 +86,7 @@ int main() {
     std::cout << "Checking whether the results agree" << std::endl;
     // Now compare the results
     for (int i = 0; i < qvals.size(); i++) {
-        if( (ndinterp_results[i]-lhapdf_results[i])/ndinterp_results[i] > 1e-4 ) {
+        if( std::abs(ndinterp_results[i]-lhapdf_results[i])/ndinterp_results[i] > 1e-4 ) {
             std::cout << "Error for q=" << qvals[i] << std::endl;
             ifail = true;
         }
