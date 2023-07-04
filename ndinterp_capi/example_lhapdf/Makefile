@@ -1,6 +1,6 @@
 CXX = c++
 CXXFLAGS = -std=c++11
-NDFLAGS = -L../../../target/release -lndinterp
+NDFLAGS = -L../../target/debug -lndinterp
 LHAFLAGS = $(shell lhapdf-config --libs --cflags)
 
 lharun: lhacheck

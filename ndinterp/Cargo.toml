@@ -9,10 +9,6 @@ readme = "README.md"
 categories = ["science"]
 description = "N-dimensional interpolation library"
 
-[lib]
-name = "ndinterp"
-crate-type = ["lib", "cdylib"]
-
 [dependencies]
 ndarray = "0.15.4"
 ndarray-linalg = "0.14.1"

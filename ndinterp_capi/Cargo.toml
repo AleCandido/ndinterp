@@ -1,0 +1,12 @@
+[package]
+name = "ndinterp_capi"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+ndarray = "0.15.4"
+ndinterp = { path = "../ndinterp/"}
+ 
+[lib]
+name = "ndinterp"
+crate-type = ["cdylib"]
