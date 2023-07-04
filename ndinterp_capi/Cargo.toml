@@ -5,8 +5,11 @@ edition = "2021"
 
 [dependencies]
 ndarray = "0.15.4"
-ndinterp = { path = "../ndinterp/"}
- 
+ndinterp = { path = "../ndinterp/" }
+
 [lib]
 name = "ndinterp"
 crate-type = ["cdylib"]
+
+[features]
+capi = []
