@@ -60,7 +60,7 @@ where
             .finder
             .as_ref()
             .expect("Finder not set.")
-            .neighbors(&(query))
+            .neighbors(query)
         {
             let dist = Point::distance(query, &self.commons.points[nb_id]);
             let nb_value = self.commons.values[nb_id];

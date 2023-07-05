@@ -26,7 +26,7 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
         values: values.into_owned(),
     };
     let cubic_interpolator = grid::cubic::Cubic1d { grid };
-    return Box::new(cubic_interpolator);
+    Box::new(cubic_interpolator)
 }
 
 /// Perform cubic1d interpolation in a previously generated interpolator
@@ -43,5 +43,5 @@ pub unsafe extern "C" fn interpolate_cubic_1d(
     interpolator: *mut grid::cubic::Cubic1d,
     query: f64,
 ) -> f64 {
-    return (*interpolator).interpolate(query).unwrap();
+    (*interpolator).interpolate(query).unwrap()
 }

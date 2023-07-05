@@ -47,10 +47,10 @@ pub struct HNSW<Point: Metric> {
 
 impl<Point: Metric> HNSW<Point> {
     pub fn new(k: u32) -> Self {
-        return HNSW {
+        HNSW {
             k,
             graph: UnGraph::<(usize, Weak<Point>), f64>::new_undirected(),
-        };
+        }
     }
 
     pub fn k(&self) -> u32 {
