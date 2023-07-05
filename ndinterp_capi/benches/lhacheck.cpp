@@ -1,12 +1,13 @@
-#include <cstdlib>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <chrono>
 #include "LHAPDF/LHAPDF.h"
 #include "ndinterp.h"
-
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 std::vector<double> string_to_vector(const std::string& stri_raw) {
     // Take the arrays from the LHAPDF file and make them into arrays
@@ -35,16 +36,18 @@ int main() {
     LHAPDF::PDF* pdf = LHAPDF::mkPDF("NNPDF40_nnlo_as_01180", 0);
 
     // Read the Q values (can they be obtained in any other way from lhapdf?)
-    std::vector<double> q2s = string_to_vector(pdf->set().get_entry("AlphaS_Qs"));
+    std::vector<double> grid_q = string_to_vector(pdf->set().get_entry("AlphaS_Qs"));
     std::vector<double> als = string_to_vector(pdf->set().get_entry("AlphaS_Vals"));
 
-    cubic1d* my_grid = create_cubic_interpolator1d(q2s.data(), als.data(), q2s.size());
+    std::for_each(grid_q.begin(), grid_q.end(), [&](double &q) { q = std::log(q * q); });
+
+    cubic1d* my_grid = create_cubic_interpolator1d(grid_q.data(), als.data(), grid_q.size());
 
     const int n = 10000000;
     const double qmin = 3.0;
     const double qmax = 100.0;
 
-    std::vector<double> qvals;
+    std::vector<double> q2vals;
     std::vector<double> ndinterp_results;
     std::vector<double> lhapdf_results;
     bool ifail = false;
@@ -52,15 +55,15 @@ int main() {
     for (int i = 0; i < n; i++) {
         double rn = (double) rand() / RAND_MAX;
         double q = qmin + rn*(qmax-qmin);
-        qvals.push_back(q);
+        q2vals.push_back(q*q);
     }
 
     std::cout << "Benchmarking the timing!" << std::endl;
     std::chrono::steady_clock::time_point st, et;
 
     st = std::chrono::steady_clock::now();
-    for (double q: qvals) {
-        double lh_res = pdf->alphasQ2(q*q);
+    for (double q2: q2vals) {
+        double lh_res = pdf->alphasQ2(q2);
         lhapdf_results.push_back(lh_res);
     }
     et = std::chrono::steady_clock::now();
@@ -68,8 +71,8 @@ int main() {
     std::cout << "while LHAPDF took " << lhapdf_time.count() << " seconds" << std::endl;
 
     st = std::chrono::steady_clock::now();
-    for (double q: qvals) {
-        double my_res = interpolate_cubic_1d(my_grid, q);
+    for (double q2: q2vals) {
+        double my_res = interpolate_cubic_1d(my_grid, std::log(q2));
         ndinterp_results.push_back(my_res);
     }
     et = std::chrono::steady_clock::now();
@@ -78,9 +81,9 @@ int main() {
 
     std::cout << "Checking whether the results agree" << std::endl;
     // Now compare the results
-    for (int i = 0; i < qvals.size(); i++) {
-        if( std::abs(ndinterp_results[i]-lhapdf_results[i])/ndinterp_results[i] > 1e-4 ) {
-            std::cout << "Error for q=" << qvals[i] << std::endl;
+    for (int i = 0; i < q2vals.size(); i++) {
+        if( std::abs(ndinterp_results[i]-lhapdf_results[i])/ndinterp_results[i] > 1e-8 ) {
+            std::cout << "Error for q=" << q2vals[i] << std::endl;
             ifail = true;
         }
     }
