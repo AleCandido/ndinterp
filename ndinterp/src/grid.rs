@@ -36,7 +36,7 @@ impl Grid {
     pub fn derivative_at(&self, index: usize) -> f64 {
         let dx = self.input[index] - self.input[index - 1];
         let dy = self.values[index] - self.values[index - 1];
-        return dy / dx;
+        dy / dx
     }
 
     /// Computes the numerical derivative of the values (`grid.values`) with respect to the input
@@ -47,7 +47,7 @@ impl Grid {
     pub fn central_derivative_at(&self, index: usize) -> f64 {
         let dy_f = self.derivative_at(index + 1);
         let dy_b = self.derivative_at(index);
-        return 0.5 * (dy_f + dy_b);
+        0.5 * (dy_f + dy_b)
     }
 
     /// Find the index of the last value in the input such that input(idx) < query
@@ -77,7 +77,7 @@ mod tests {
             input: x,
             values: y,
         };
-        return grid;
+        grid
     }
 
     #[test]

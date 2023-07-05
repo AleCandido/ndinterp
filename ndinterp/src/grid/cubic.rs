@@ -1,4 +1,5 @@
-///! Implements cubic interpolation algorithms
+//! Implements cubic interpolation algorithms
+
 use crate::grid::Grid;
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
@@ -15,9 +16,6 @@ pub use crate::interpolate::Interpolator;
 /// returns the value of y(ti) (with 0 < i < n):
 ///         y(t) = h00(t)*p0 + h10(t)*m0*dx + h01(t)*p1 + h11(t)*m1*dx
 /// with hij the Hermite basis functions
-///
-///
-
 #[derive(Debug)]
 pub struct Cubic1d {
     pub grid: Grid,
@@ -62,6 +60,6 @@ impl Interpolator<f64> for Cubic1d {
         let m0 = dydxl * (t3 - 2. * t2 + t);
         let m1 = dydxu * (t3 - t2);
 
-        return Ok(p0 + p1 + m0 + m1);
+        Ok(p0 + p1 + m0 + m1)
     }
 }

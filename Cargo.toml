@@ -1,5 +1,5 @@
 [workspace]
-members = ["ndinterp"] # "ndinterp_py"]
+members = ["ndinterp", "ndinterp_capi"] # "ndinterp_py"]
 
 [profile.release]
 lto = true

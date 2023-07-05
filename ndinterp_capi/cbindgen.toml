@@ -1,0 +1,14 @@
+language = "C"
+
+############## Options for Wrapping the Contents of the Header #################
+
+include_guard = "NDINTERP_H"
+include_version = true
+no_includes = true
+usize_is_size_t = true
+cpp_compat = true
+
+############################## Codegen Options ##################################
+
+[export.rename]
+"Cubic1d" = "cubic1d"
