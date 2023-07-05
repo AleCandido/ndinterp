@@ -91,5 +91,7 @@ int main() {
         std::cout << "All tested points agreed with LHAPDF ✅" << std::endl;
     }
 
+    delete_cubic_interpolator1d(my_grid);
+
     return 0;
 }

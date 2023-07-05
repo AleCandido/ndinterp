@@ -29,6 +29,15 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
     Box::new(cubic_interpolator)
 }
 
+/// Deletes an object created by [`create_cubic_interpolator1d`].
+///
+/// # Safety
+///
+/// The object given to this function must have been created by [`create_cubic_interpolator1d`] and
+/// this function must not have been called with it before.
+#[no_mangle]
+pub unsafe extern "C" fn delete_cubic_interpolator1d(_: Box<grid::cubic::Cubic1d>) {}
+
 /// Perform cubic1d interpolation in a previously generated interpolator
 ///
 /// # Safety
