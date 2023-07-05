@@ -1,3 +1,6 @@
+#![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
+#![warn(missing_docs)]
+
 use ndarray::ArrayView1;
 /// C interface for ndinterp
 use ndinterp::grid;
