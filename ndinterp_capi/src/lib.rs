@@ -7,14 +7,19 @@ pub struct Cubic1d;
 
 /// Creates a cubic1d interpolator given the nodes
 /// and the values of the function in said nodes
+///
+/// # Safety
+///
+/// This function is only safe to call as long as `input_c` and `values_c` are arrays with sizes
+/// larger or equal to `size`.
 #[no_mangle]
 pub unsafe extern "C" fn create_cubic_interpolator1d(
     input_c: *const f64,
     values_c: *const f64,
     size: usize,
 ) -> Box<grid::cubic::Cubic1d> {
-    let input = unsafe { ArrayView1::from_shape_ptr((size,), input_c) };
-    let values = unsafe { ArrayView1::from_shape_ptr((size,), values_c) };
+    let input = ArrayView1::from_shape_ptr(size, input_c);
+    let values = ArrayView1::from_shape_ptr(size, values_c);
 
     let grid = grid::Grid {
         input: input.into_owned(),
@@ -26,6 +31,11 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
 
 /// Perform cubic1d interpolation in a previously generated interpolator
 ///
+/// # Safety
+///
+/// The parameter `interpolator` must point to an object created by
+/// [`create_cubic_interpolator1d`], otherwise this function is not safe to call.
+///
 /// # TODO
 /// This doesn't need to be specific for 1D. Can I do it for any d?
 #[no_mangle]
@@ -33,6 +43,5 @@ pub unsafe extern "C" fn interpolate_cubic_1d(
     interpolator: *mut grid::cubic::Cubic1d,
     query: f64,
 ) -> f64 {
-    let interpolator = &mut *interpolator;
-    return interpolator.interpolate(query).unwrap();
+    return (*interpolator).interpolate(query).unwrap();
 }
