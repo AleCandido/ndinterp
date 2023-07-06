@@ -8,7 +8,7 @@ lharun: lhacheck
 	./lhacheck
 
 lhacheck: lhacheck.cpp
-	$(CXX) $(CXXFLAGS) $< $(NDFLAGS) $(LHAFLAGS) -o $@
+	$(CXX) $(CXXFLAGS) -g $< $(NDFLAGS) $(LHAFLAGS) -o $@
 
 clean:
 	rm -f lhacheck

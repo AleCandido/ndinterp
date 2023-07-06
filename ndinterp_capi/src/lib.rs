@@ -2,6 +2,8 @@
 #![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
 #![warn(missing_docs)]
 
+use core::slice;
+
 use ndarray::ArrayView1;
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
@@ -18,11 +20,12 @@ pub struct Cubic1d;
 /// larger or equal to `size`.
 #[no_mangle]
 pub unsafe extern "C" fn create_cubic_interpolator1d(
-    input_c: *mut f64,
+    input_c: *const f64,
     values_c: *const f64,
     size: usize,
 ) -> Box<grid::cubic::Cubic1d> {
-    let input = vec![Vec::from_raw_parts(input_c, size, size)];
+    let slice_input = unsafe { slice::from_raw_parts(input_c, size) } ;
+    let input = vec![slice_input.to_vec()];
     let values = ArrayView1::from_shape_ptr(size, values_c);
 
     let grid = grid::Grid {
