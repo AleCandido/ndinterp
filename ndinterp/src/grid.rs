@@ -71,32 +71,32 @@ impl Grid<Ix1> {
     }
 }
 
-//#[cfg(test)]
-//mod tests {
-//    use super::*;
-//    use ndarray::array;
-//
-//    fn gen_grid() -> Grid {
-//        let x = array![0., 1., 2., 3., 4.];
-//        let y = array![4., 3., 2., 1., 1.];
-//        let grid = Grid {
-//            input: x,
-//            values: y,
-//        };
-//        grid
-//    }
-//
-//    #[test]
-//    fn check_derivative() {
-//        let grid = gen_grid();
-//        assert_eq!(grid.central_derivative_at(1), -1.);
-//        assert_eq!(grid.central_derivative_at(3), -0.5);
-//    }
-//
-//    #[test]
-//    fn check_index_search() {
-//        let grid = gen_grid();
-//        assert_eq!(grid.closest_below(0.5).unwrap(), 0);
-//        assert_eq!(grid.closest_below(3.2).unwrap(), 3);
-//    }
-//}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::array;
+
+    fn gen_grid() -> Grid<Ix1> {
+        let x = vec![vec![0., 1., 2., 3., 4.]];
+        let y = array![4., 3., 2., 1., 1.];
+        let grid = Grid {
+            input: x,
+            values: y,
+        };
+        grid
+    }
+
+    #[test]
+    fn check_derivative() {
+        let grid = gen_grid();
+        assert_eq!(grid.central_derivative_at(1), -1.);
+        assert_eq!(grid.central_derivative_at(3), -0.5);
+    }
+
+    #[test]
+    fn check_index_search() {
+        let grid = gen_grid();
+        assert_eq!(grid.closest_below(0.5).unwrap(), 0);
+        assert_eq!(grid.closest_below(3.2).unwrap(), 3);
+    }
+}
