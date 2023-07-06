@@ -1,11 +1,12 @@
+//! C interface for ndinterp
 #![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
 #![warn(missing_docs)]
 
 use ndarray::ArrayView1;
-/// C interface for ndinterp
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
 
+/// cubic1d inteprolator
 pub struct Cubic1d;
 
 /// Creates a cubic1d interpolator given the nodes
@@ -17,15 +18,15 @@ pub struct Cubic1d;
 /// larger or equal to `size`.
 #[no_mangle]
 pub unsafe extern "C" fn create_cubic_interpolator1d(
-    input_c: *const f64,
+    input_c: *mut f64,
     values_c: *const f64,
     size: usize,
 ) -> Box<grid::cubic::Cubic1d> {
-    let input = ArrayView1::from_shape_ptr(size, input_c);
+    let input = vec![Vec::from_raw_parts(input_c, size, size)];
     let values = ArrayView1::from_shape_ptr(size, values_c);
 
     let grid = grid::Grid {
-        input: input.into_owned(),
+        input,
         values: values.into_owned(),
     };
     let cubic_interpolator = grid::cubic::Cubic1d { grid };

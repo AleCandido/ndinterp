@@ -40,7 +40,7 @@ fn main() {
     ];
 
     let grid = Grid {
-        input: logq2,
+        input: vec![logq2.to_vec()],
         values: alpha_s_vals,
     };
 

@@ -3,6 +3,7 @@
 use crate::grid::Grid;
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
+use ndarray::Ix1;
 
 /// Cubic interpolation in 1D
 ///
@@ -18,7 +19,8 @@ pub use crate::interpolate::Interpolator;
 /// with hij the Hermite basis functions
 #[derive(Debug)]
 pub struct Cubic1d {
-    pub grid: Grid,
+    /// The grid object contains all necessary information to perform the interpolation
+    pub grid: Grid<Ix1>,
 }
 
 impl Interpolator<f64> for Cubic1d {
@@ -33,13 +35,13 @@ impl Interpolator<f64> for Cubic1d {
     /// bins, the derivative at the boundary is approximated by the forward (backward) difference
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
         let idx = self.grid.closest_below(query)?;
-        let dx = self.grid.input[idx + 1] - self.grid.input[idx];
+        let dx = self.grid.input[0][idx + 1] - self.grid.input[0][idx];
 
         // Upper and lower bounds and derivatives
         let yu = self.grid.values[idx + 1];
         let yl = self.grid.values[idx];
 
-        let dydxu = if idx == self.grid.input.len() - 2 {
+        let dydxu = if idx == self.grid.input[0].len() - 2 {
             dx * self.grid.derivative_at(idx + 1)
         } else {
             dx * self.grid.central_derivative_at(idx + 1)
@@ -51,7 +53,7 @@ impl Interpolator<f64> for Cubic1d {
             dx * self.grid.central_derivative_at(idx)
         };
 
-        let t = (query - self.grid.input[idx]) / dx;
+        let t = (query - self.grid.input[0][idx]) / dx;
         let t2 = t * t;
         let t3 = t2 * t;
 
