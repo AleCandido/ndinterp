@@ -34,7 +34,8 @@ impl Interpolator<f64> for Cubic1d {
     /// Two special are considered, when the interpolation occurs between the first (last) two
     /// bins, the derivative at the boundary is approximated by the forward (backward) difference
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
-        let idx = self.grid.closest_below(query)?;
+        let raw_idx = self.grid.closest_below::<1>(&[query])?;
+        let idx = raw_idx[0];
         let dx = self.grid.input[0][idx + 1] - self.grid.input[0][idx];
 
         // Upper and lower bounds and derivatives

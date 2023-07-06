@@ -10,6 +10,7 @@
 //!     y = f(x1, x2, x3...)
 //!
 use crate::interpolate::InterpolationError;
+use itertools::izip;
 use ndarray::{Array, Dimension, Ix1};
 
 // Make public the families of interpolation algorithms implemented for grids
@@ -54,20 +55,28 @@ impl Grid<Ix1> {
         let dy_b = self.derivative_at(index);
         0.5 * (dy_f + dy_b)
     }
+}
 
+impl<D: Dimension> Grid<D> {
     /// Find the index of the last value in the input such that input(idx) < query
     /// If the query is outside the grid returns an extrapolation error
-    pub fn closest_below(&self, query: f64) -> Result<usize, InterpolationError> {
-        if query > self.input[0][self.input[0].len() - 1] {
-            Err(InterpolationError::ExtrapolationAbove(query))
-        } else if query < self.input[0][0] {
-            Err(InterpolationError::ExtrapolationBelow(query))
-        } else {
-            let u_idx = self.input[0].partition_point(|&x| x < query);
-            //            let u_idx = self.input.iter().position(|x| x > &query).unwrap();
-            let idx = u_idx - 1;
-            Ok(idx)
+    pub fn closest_below<const N: usize>(
+        &self,
+        input_query: &[f64],
+    ) -> Result<[usize; N], InterpolationError> {
+        let mut ret = [0; N];
+
+        for (r, &query, igrid) in izip!(&mut ret, input_query, &self.input) {
+            if query > *igrid.last().unwrap() {
+                return Err(InterpolationError::ExtrapolationAbove(query));
+            } else if query < igrid[0] {
+                return Err(InterpolationError::ExtrapolationBelow(query));
+            }
+
+            let u_idx = igrid.partition_point(|&x| x < query);
+            *r = u_idx - 1;
         }
+        Ok(ret)
     }
 }
 
@@ -96,7 +105,7 @@ mod tests {
     #[test]
     fn check_index_search() {
         let grid = gen_grid();
-        assert_eq!(grid.closest_below(0.5).unwrap(), 0);
-        assert_eq!(grid.closest_below(3.2).unwrap(), 3);
+        assert_eq!(grid.closest_below::<1>(&[0.5]).unwrap()[0], 0);
+        assert_eq!(grid.closest_below::<1>(&[3.2]).unwrap()[0], 3);
     }
 }

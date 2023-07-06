@@ -26,7 +26,7 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
 ) -> Box<grid::cubic::Cubic1d> {
     // Use slice instead of vec so that rust doesn't take ownership of the data and releases
     // the burden is on the function calling them
-    let slice_input = unsafe { slice::from_raw_parts(input_c, size) } ;
+    let slice_input = unsafe { slice::from_raw_parts(input_c, size) };
     let input = vec![slice_input.to_vec()];
     let values = ArrayView1::from_shape_ptr(size, values_c);
 
