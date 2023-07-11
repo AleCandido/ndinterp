@@ -1,5 +1,5 @@
 //! C interface for ndinterp
-#![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
+#![warn(clippy::all, clippy::cargo)]
 #![warn(missing_docs)]
 
 use core::slice;
