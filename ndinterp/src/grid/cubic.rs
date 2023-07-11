@@ -36,13 +36,16 @@ impl Interpolator<f64> for Cubic1d {
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
         let raw_idx = self.grid.closest_below::<1>(&[query])?;
         let idx = raw_idx[0];
-        let dx = self.grid.input[0][idx + 1] - self.grid.input[0][idx];
+        let xgrid = &self.grid.xgrid;
+
+
+        let dx = xgrid[0][idx + 1] - xgrid[0][idx];
 
         // Upper and lower bounds and derivatives
         let yu = self.grid.values[idx + 1];
         let yl = self.grid.values[idx];
 
-        let dydxu = if idx == self.grid.input[0].len() - 2 {
+        let dydxu = if idx == xgrid[0].len() - 2 {
             dx * self.grid.derivative_at(idx + 1)
         } else {
             dx * self.grid.central_derivative_at(idx + 1)
@@ -54,7 +57,7 @@ impl Interpolator<f64> for Cubic1d {
             dx * self.grid.central_derivative_at(idx)
         };
 
-        let t = (query - self.grid.input[0][idx]) / dx;
+        let t = (query - xgrid[0][idx]) / dx;
         let t2 = t * t;
         let t3 = t2 * t;
 

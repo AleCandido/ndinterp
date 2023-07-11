@@ -21,8 +21,8 @@ pub mod cubic;
 ///     A d-dimensional array for the grid values of
 #[derive(Debug)]
 pub struct Grid<D: Dimension> {
-    /// Arrays with the input vectors
-    pub input: Vec<Vec<f64>>,
+    /// Arrays with the input vectors (x_i)
+    pub xgrid: Vec<Vec<f64>>,
 
     /// Output points
     pub values: Array<f64, D>,
@@ -40,7 +40,7 @@ impl Grid<Ix1> {
     ///     dy = y_{i} - y_{i-1}
     ///     dx = x_{i} - x_{x-1}
     pub fn derivative_at(&self, index: usize) -> f64 {
-        let dx = self.input[0][index] - self.input[0][index - 1];
+        let dx = self.xgrid[0][index] - self.xgrid[0][index - 1];
         let dy = self.values[index] - self.values[index - 1];
         dy / dx
     }
@@ -58,7 +58,7 @@ impl Grid<Ix1> {
 }
 
 impl<D: Dimension> Grid<D> {
-    /// Find the index of the last value in the input such that input(idx) < query
+    /// Find the index of the last value in the input xgrid such that xgrid(idx) < query
     /// If the query is outside the grid returns an extrapolation error
     pub fn closest_below<const N: usize>(
         &self,
@@ -66,7 +66,7 @@ impl<D: Dimension> Grid<D> {
     ) -> Result<[usize; N], InterpolationError> {
         let mut ret = [0; N];
 
-        for (r, &query, igrid) in izip!(&mut ret, input_query, &self.input) {
+        for (r, &query, igrid) in izip!(&mut ret, input_query, &self.xgrid) {
             if query > *igrid.last().unwrap() {
                 return Err(InterpolationError::ExtrapolationAbove(query));
             } else if query < igrid[0] {
@@ -90,7 +90,7 @@ mod tests {
         let y = array![4., 3., 2., 1., 1.];
         
         Grid {
-            input: x,
+            xgrid: x,
             values: y,
         }
     }

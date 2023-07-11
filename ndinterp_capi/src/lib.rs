@@ -16,22 +16,22 @@ pub struct Cubic1d;
 ///
 /// # Safety
 ///
-/// This function is only safe to call as long as `input_c` and `values_c` are arrays with sizes
+/// This function is only safe to call as long as `xgrid_c` and `values_c` are arrays with sizes
 /// larger or equal to `size`.
 #[no_mangle]
 pub unsafe extern "C" fn create_cubic_interpolator1d(
-    input_c: *const f64,
+    xgrid_c: *const f64,
     values_c: *const f64,
     size: usize,
 ) -> Box<grid::cubic::Cubic1d> {
-    // Use slice instead of vec so that rust doesn't take ownership of the data and releases
-    // the burden is on the function calling them
-    let slice_input = unsafe { slice::from_raw_parts(input_c, size) };
-    let input = vec![slice_input.to_vec()];
+    // Use slice instead of vec, so that rust doesn't release the memory coming from C++
+    let slice_input = unsafe { slice::from_raw_parts(xgrid_c, size) };
+    // Make a copy of the data into a vector (of vectors) for rust to own
+    let xgrid = vec![slice_input.to_vec()];
     let values = ArrayView1::from_shape_ptr(size, values_c);
 
     let grid = grid::Grid {
-        input,
+        xgrid,
         values: values.into_owned(),
     };
     let cubic_interpolator = grid::cubic::Cubic1d { grid };
