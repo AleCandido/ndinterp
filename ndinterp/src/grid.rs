@@ -88,11 +88,11 @@ mod tests {
     fn gen_grid() -> Grid<Ix1> {
         let x = vec![vec![0., 1., 2., 3., 4.]];
         let y = array![4., 3., 2., 1., 1.];
-        let grid = Grid {
+        
+        Grid {
             input: x,
             values: y,
-        };
-        grid
+        }
     }
 
     #[test]

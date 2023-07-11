@@ -1,5 +1,5 @@
 #include "LHAPDF/LHAPDF.h"
-#include "ndinterp.h"
+#include "ndinterp_capi.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>

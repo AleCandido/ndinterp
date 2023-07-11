@@ -1,14 +1,21 @@
 [package]
 name = "ndinterp_capi"
 version = "0.0.1"
+authors = ["Alessandro Candido <alessandro.candido@sns.it>", "Juan Cruz-Martinez <juacrumar@lairen.eu>"]
 edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/AleCandido/ndinterp/ndinterp_capi"
+readme = "README.md"
+categories = ["science"]
+description = "C bindings for ndinterp"
+keywords = ["math", "science"]
 
 [dependencies]
 ndarray = "0.15.4"
 ndinterp = { path = "../ndinterp/" }
 
 [lib]
-name = "ndinterp"
+name = "ndinterp_capi"
 crate-type = ["cdylib"]
 
 [features]

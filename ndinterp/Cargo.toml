@@ -1,13 +1,14 @@
 [package]
 name = "ndinterp"
 version = "0.0.1"
-authors = ["Alessandro Candido <alessandro.candido@sns.it>"]
+authors = ["Alessandro Candido <alessandro.candido@sns.it>", "Juan Cruz-Martinez <juacrumar@lairen.eu>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/AleCandido/ndinterp"
 readme = "README.md"
 categories = ["science"]
 description = "N-dimensional interpolation library"
+keywords = ["math", "science"]
 
 [dependencies]
 ndarray = "0.15.4"
