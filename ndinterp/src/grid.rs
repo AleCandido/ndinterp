@@ -11,7 +11,7 @@
 //!
 use crate::interpolate::InterpolationError;
 use itertools::izip;
-use ndarray::{Array, Dimension, Ix1};
+use ndarray::{Array, ArrayView1, Dimension};
 
 // Make public the families of interpolation algorithms implemented for grids
 pub mod cubic;
@@ -28,7 +28,16 @@ pub struct Grid<D: Dimension> {
     pub values: Array<f64, D>,
 }
 
-impl Grid<Ix1> {
+/// A grid slice is always 1-Dimensional
+#[derive(Debug)]
+pub struct GridSlice<'a> {
+    /// A reference to one of the input vectors of the grid
+    pub x: &'a Vec<f64>,
+    /// A view of the slice of values corresponding to x
+    pub y: ArrayView1<'a, f64>,
+}
+
+impl<'a> GridSlice<'a> {
     // TODO: at the moment we are using here the derivatives that LHAPDF is using for the
     // interpolation in alpha_s, these are probably enough for this use case but not in general
     // - [ ] Implement a more robust form of the derivative
@@ -39,9 +48,9 @@ impl Grid<Ix1> {
     /// input at position index as the ratio between the differences dy/dx computed as:
     ///     dy = y_{i} - y_{i-1}
     ///     dx = x_{i} - x_{x-1}
-    pub fn derivative_at(&self, index: usize) -> f64 {
-        let dx = self.xgrid[0][index] - self.xgrid[0][index - 1];
-        let dy = self.values[index] - self.values[index - 1];
+    pub fn derivative_at(&'a self, index: usize) -> f64 {
+        let dx = self.x[index] - self.x[index - 1];
+        let dy = self.y[index] - self.y[index - 1];
         dy / dx
     }
 
@@ -50,7 +59,7 @@ impl Grid<Ix1> {
     ///
     /// Dx_{i} = \Delta x_{i} = x_{i} - x_{i-}
     /// y'_{i} = 1/2 * ( (y_{i+1}-y_{i})/Dx_{i+1} + (y_{i}-y_{i-1})/Dx_{i} )
-    pub fn central_derivative_at(&self, index: usize) -> f64 {
+    pub fn central_derivative_at(&'a self, index: usize) -> f64 {
         let dy_f = self.derivative_at(index + 1);
         let dy_b = self.derivative_at(index);
         0.5 * (dy_f + dy_b)
@@ -83,12 +92,12 @@ impl<D: Dimension> Grid<D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ndarray::{array, Ix1};
 
     fn gen_grid() -> Grid<Ix1> {
         let x = vec![vec![0., 1., 2., 3., 4.]];
         let y = array![4., 3., 2., 1., 1.];
-        
+
         Grid {
             xgrid: x,
             values: y,
@@ -98,8 +107,12 @@ mod tests {
     #[test]
     fn check_derivative() {
         let grid = gen_grid();
-        assert_eq!(grid.central_derivative_at(1), -1.);
-        assert_eq!(grid.central_derivative_at(3), -0.5);
+        let grid_slice = GridSlice {
+            x: &grid.xgrid[0],
+            y: grid.values.view(),
+        };
+        assert_eq!(grid_slice.central_derivative_at(1), -1.);
+        assert_eq!(grid_slice.central_derivative_at(3), -0.5);
     }
 
     #[test]

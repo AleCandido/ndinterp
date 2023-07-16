@@ -1,6 +1,6 @@
 //! Implements cubic interpolation algorithms
 
-use crate::grid::Grid;
+use crate::grid::{Grid, GridSlice};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
 use ndarray::Ix1;
@@ -23,6 +23,43 @@ pub struct Cubic1d {
     pub grid: Grid<Ix1>,
 }
 
+impl<'a> GridSlice<'a> {
+    /// Implements utilities for a GridSlice that can be used by cubic interpolation Nd
+    /// Takes as input the value being queried and its index within the given slice
+    fn cubic_interpolate_1d(&'a self, query: f64, idx: usize) -> Result<f64, InterpolationError> {
+        // grid slice utilities are expected to be called multipled times for the same
+        // query and so it is convient to pass idx from the outside to avoid expensive searches
+        let dx = self.x[idx + 1] - self.x[idx];
+
+        // Upper and lower bounds and derivatives
+        let yu = self.y[idx + 1];
+        let yl = self.y[idx];
+
+        let dydxu = if idx == self.x.len() - 2 {
+            dx * self.derivative_at(idx + 1)
+        } else {
+            dx * self.central_derivative_at(idx + 1)
+        };
+
+        let dydxl = if idx == 0 {
+            dx * self.derivative_at(idx + 1)
+        } else {
+            dx * self.central_derivative_at(idx)
+        };
+
+        let t = (query - self.x[idx]) / dx;
+        let t2 = t * t;
+        let t3 = t2 * t;
+
+        let p0 = yl * (2. * t3 - 3. * t2 + 1.);
+        let p1 = yu * (-2. * t3 + 3. * t2);
+        let m0 = dydxl * (t3 - 2. * t2 + t);
+        let m1 = dydxu * (t3 - t2);
+
+        Ok(p0 + p1 + m0 + m1)
+    }
+}
+
 impl Interpolator<f64> for Cubic1d {
     /// Use Cubic interpolation 1d to compute y(query)
     /// The interpolation uses the two nearest neighbours and their derivatives computed as an
@@ -36,36 +73,12 @@ impl Interpolator<f64> for Cubic1d {
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
         let raw_idx = self.grid.closest_below::<1>(&[query])?;
         let idx = raw_idx[0];
-        let xgrid = &self.grid.xgrid;
 
-
-        let dx = xgrid[0][idx + 1] - xgrid[0][idx];
-
-        // Upper and lower bounds and derivatives
-        let yu = self.grid.values[idx + 1];
-        let yl = self.grid.values[idx];
-
-        let dydxu = if idx == xgrid[0].len() - 2 {
-            dx * self.grid.derivative_at(idx + 1)
-        } else {
-            dx * self.grid.central_derivative_at(idx + 1)
+        let grid_sl = GridSlice {
+            x: &self.grid.xgrid[0],
+            y: self.grid.values.view(),
         };
 
-        let dydxl = if idx == 0 {
-            dx * self.grid.derivative_at(idx + 1)
-        } else {
-            dx * self.grid.central_derivative_at(idx)
-        };
-
-        let t = (query - xgrid[0][idx]) / dx;
-        let t2 = t * t;
-        let t3 = t2 * t;
-
-        let p0 = yl * (2. * t3 - 3. * t2 + 1.);
-        let p1 = yu * (-2. * t3 + 3. * t2);
-        let m0 = dydxl * (t3 - 2. * t2 + t);
-        let m1 = dydxu * (t3 - t2);
-
-        Ok(p0 + p1 + m0 + m1)
+        grid_sl.cubic_interpolate_1d(query, idx)
     }
 }
