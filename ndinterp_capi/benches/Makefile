@@ -8,7 +8,7 @@ lharun: lhacheck
 	./lhacheck
 
 lhacheck: lhacheck.cpp
-	$(CXX) $(CXXFLAGS) -g $< $(NDFLAGS) $(LHAFLAGS) -o $@
+	$(CXX) $(CXXFLAGS) -g $< $(NDFLAGS) $(LHAFLAGS) -o $@ -D LHAPDFDATADIR='"$(shell lhapdf-config --datadir)"'
 
 clean:
 	rm -f lhacheck
