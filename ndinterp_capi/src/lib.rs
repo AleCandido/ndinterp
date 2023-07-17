@@ -4,12 +4,12 @@
 
 use core::slice;
 
-use ndarray::ArrayView1;
+use ndarray::{ArrayView1, Ix1};
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
 
 /// cubic1d inteprolator
-pub struct Cubic1d;
+pub struct Cubic1d(grid::cubic::Cubic<Ix1>);
 
 /// Creates a cubic1d interpolator given the nodes
 /// and the values of the function in said nodes
@@ -23,7 +23,7 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
     xgrid_c: *const f64,
     values_c: *const f64,
     size: usize,
-) -> Box<grid::cubic::Cubic1d> {
+) -> Box<Cubic1d> {
     // Use slice instead of vec, so that rust doesn't release the memory coming from C++
     let slice_input = unsafe { slice::from_raw_parts(xgrid_c, size) };
     // Make a copy of the data into a vector (of vectors) for rust to own
@@ -34,7 +34,7 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
         xgrid,
         values: values.into_owned(),
     };
-    let cubic_interpolator = grid::cubic::Cubic1d { grid };
+    let cubic_interpolator = Cubic1d(grid::cubic::Cubic { grid });
     Box::new(cubic_interpolator)
 }
 
@@ -45,7 +45,7 @@ pub unsafe extern "C" fn create_cubic_interpolator1d(
 /// The object given to this function must have been created by [`create_cubic_interpolator1d`] and
 /// this function must not have been called with it before.
 #[no_mangle]
-pub unsafe extern "C" fn delete_cubic_interpolator1d(_: Box<grid::cubic::Cubic1d>) {}
+pub unsafe extern "C" fn delete_cubic_interpolator1d(_: Box<Cubic1d>) {}
 
 /// Perform cubic1d interpolation in a previously generated interpolator
 ///
@@ -57,9 +57,6 @@ pub unsafe extern "C" fn delete_cubic_interpolator1d(_: Box<grid::cubic::Cubic1d
 /// # TODO
 /// This doesn't need to be specific for 1D. Can I do it for any d?
 #[no_mangle]
-pub unsafe extern "C" fn interpolate_cubic_1d(
-    interpolator: *mut grid::cubic::Cubic1d,
-    query: f64,
-) -> f64 {
-    (*interpolator).interpolate(query).unwrap()
+pub unsafe extern "C" fn interpolate_cubic_1d(interpolator: *mut Cubic1d, query: f64) -> f64 {
+    (*interpolator).0.interpolate(query).unwrap()
 }

@@ -1,35 +1,28 @@
 //! Implements cubic interpolation algorithms
+//!
+//! These are the algorithms used by the LHAPDF library for `alpha_s` and pdf(x, q)
+//!
 
 use crate::grid::{Grid, GridSlice};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
-use ndarray::{Axis, Ix1, Ix2};
+use ndarray::{Axis, Dimension, Ix1, Ix2};
 
-/// Cubic interpolation in 1D
+/// Cubic interpolation
+#[derive(Debug)]
+pub struct Cubic<D: Dimension> {
+    /// The grid object contains all necessary information to perform the interpolation
+    pub grid: Grid<D>,
+}
+
 ///
-/// Note: this is the interpolation algorithm used by the LHAPDF library for `alpha_s`, in LHAPDF
-/// the interpolation variable is `log(q^2)`
-///
-/// Given t in an interval [t0, tn] such that
+/// In 1D the interpolation is such that given t in an interval [t0, tn] such that
 ///     p0 = y(t0)  ; p1 = y(tn)
 ///     m0 = y'(t0) ; m1 = y'(tn)
 ///     dx = ti+1 - ti
 /// returns the value of y(ti) (with 0 < i < n):
 ///         y(t) = h00(t)*p0 + h10(t)*m0*dx + h01(t)*p1 + h11(t)*m1*dx
 /// with hij the Hermite basis functions
-#[derive(Debug)]
-pub struct Cubic1d {
-    /// The grid object contains all necessary information to perform the interpolation
-    pub grid: Grid<Ix1>,
-}
-
-/// Cubic interpolation in 2D
-#[derive(Debug)]
-pub struct Cubic2d {
-    /// The grid object contains all necessary information to perform the interpolation
-    pub grid: Grid<Ix2>,
-}
-
 fn cubic_interpolation_1d(t: f64, yl: f64, yu: f64, dydxl: f64, dydxu: f64) -> f64 {
     let t2 = t * t;
     let t3 = t2 * t;
@@ -45,6 +38,8 @@ fn cubic_interpolation_1d(t: f64, yl: f64, yu: f64, dydxl: f64, dydxu: f64) -> f
 impl<'a> GridSlice<'a> {
     /// Implements utilities for a GridSlice that can be used by cubic interpolation Nd
     /// Takes as input the value being queried and its index within the given slice
+
+    /// Perform 1d cubic interpolation such that f(x) = y
     fn cubic_interpolate_1d(&'a self, query: f64, idx: usize) -> Result<f64, InterpolationError> {
         // grid slice utilities are expected to be called multipled times for the same
         // query and so it is convient to pass idx from the outside to avoid expensive searches
@@ -72,7 +67,7 @@ impl<'a> GridSlice<'a> {
     }
 }
 
-impl Interpolator<f64> for Cubic1d {
+impl Interpolator<f64> for Cubic<Ix1> {
     /// Use Cubic interpolation 1d to compute y(query)
     /// The interpolation uses the two nearest neighbours and their derivatives computed as an
     /// average of the differences above and below.
@@ -95,7 +90,7 @@ impl Interpolator<f64> for Cubic1d {
     }
 }
 
-impl Interpolator<&[f64]> for Cubic2d {
+impl Interpolator<&[f64]> for Cubic<Ix2> {
     /// Use Cubic interpolation 2d to compute y(x1, x2)
     fn interpolate(&self, query: &[f64]) -> Result<f64, InterpolationError> {
         let raw_idx = self.grid.closest_below::<2>(query)?;

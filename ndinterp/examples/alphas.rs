@@ -9,7 +9,7 @@
 /// 4. Extrapolation above and below (results in an error!)
 use ndarray::array;
 
-use ndinterp::grid::cubic::{Cubic1d, Interpolator};
+use ndinterp::grid::cubic::{Cubic, Interpolator};
 use ndinterp::grid::Grid;
 use ndinterp::interpolate::InterpolationError;
 
@@ -44,7 +44,7 @@ fn main() {
         values: alpha_s_vals,
     };
 
-    let cubic_interpolator = Cubic1d { grid };
+    let cubic_interpolator = Cubic { grid };
 
     let example_q: Vec<f64> = vec![1.7, 1.8, 2.6, 3.4, 4.1, 4.5, 10.0, 1.0];
     let lhapdf_res = vec![

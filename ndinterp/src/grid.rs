@@ -29,6 +29,7 @@ pub struct Grid<D: Dimension> {
 }
 
 /// A grid slice is always 1-Dimensional
+/// and it is made of the x and y values such that f(x) = y
 #[derive(Debug)]
 pub struct GridSlice<'a> {
     /// A reference to one of the input vectors of the grid

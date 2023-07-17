@@ -1,7 +1,7 @@
 /// This example uses the cubic_2d interpolation to perform PDF interpolation
 /// in x and q2, the example values have been obtained with LHAPDF6
 use ndarray::array;
-use ndinterp::grid::cubic::{Cubic2d, Interpolator};
+use ndinterp::grid::cubic::{Cubic, Interpolator};
 use ndinterp::grid::Grid;
 
 fn main() {
@@ -93,7 +93,7 @@ fn main() {
     let example_q = array![5., 9.72449464910884].mapv(f64::ln);
     let example_pdf = array![2.262049289694598, 3.5430904];
 
-    let cubic_interpolator = Cubic2d { grid };
+    let cubic_interpolator = Cubic { grid };
 
     for (i, qval) in example_q.iter().enumerate() {
         let x = example_x[i];
