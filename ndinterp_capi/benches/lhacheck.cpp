@@ -13,6 +13,7 @@
 
 #define PDFSET "NNPDF40_nnlo_as_01180"
 #define FLAVOR 1
+#define VERBOSE true
 
 using namespace std;
 
@@ -35,7 +36,7 @@ vector<double> string_to_vector(const string& stri_raw, const char *sep) {
 
 
 int main() {
-    const int n = 100000;
+    const int n = 5000000;
 
     cout << "Compare the interpolation results between ndinterp and LHAPDF" << endl;
 
@@ -92,7 +93,7 @@ int main() {
     // Now compare the results
     for (int i = 0; i < q2vals.size(); i++) {
         if( abs(ndinterp_results[i]-lhapdf_results[i])/ndinterp_results[i] > 1e-8 ) {
-            cout << "Error for q=" << q2vals[i] << endl;
+            if (VERBOSE) cout << "Error for q=" << q2vals[i] << endl;
             ifail = true;
         }
     }
@@ -122,6 +123,7 @@ int main() {
     // Read the xgrid
     getline(datfile, line);
     vector<double> grid_x_pdf = string_to_vector(line, " ");
+    grid_x_pdf[0] = 1e-9;
 
     // Read the qgrid
     getline(datfile, line);
@@ -139,11 +141,6 @@ int main() {
     double pdf_qmin = grid_q_pdf[1];
     double pdf_qmax = grid_q_pdf[grid_q_pdf.size() - 2];
 
-    // Now prepare the 2d grid
-    for_each(grid_q_pdf.begin(), grid_q_pdf.end(), [&](double &q) { q = log(q * q); });
-    for_each(grid_x_pdf.begin(), grid_x_pdf.end(), [&](double &x) { x = log(x); });
-    cubic2d* pdf_grid = create_cubic_interpolator2d(grid_x_pdf.data(), grid_q_pdf.data(), pdfvals.data(), grid_x_pdf.size(), grid_q_pdf.size());
-
     vector<double> q2vals_pdf;
     vector<double> xvals_pdf;
 
@@ -157,6 +154,13 @@ int main() {
         q2vals_pdf.push_back(q*q);
         xvals_pdf.push_back(x);
     }
+
+    // Now prepare the 2d grid
+    for_each(grid_q_pdf.begin(), grid_q_pdf.end(), [&](double &q) { q = log(q * q); });
+    for_each(grid_x_pdf.begin(), grid_x_pdf.end(), [&](double &x) { x = log(x); });
+    cubic2d* pdf_grid = create_cubic_interpolator2d(grid_x_pdf.data(), grid_q_pdf.data(), pdfvals.data(), grid_x_pdf.size(), grid_q_pdf.size());
+
+
 
     cout << "Benchmarking the timing!" << endl;
 
@@ -187,9 +191,11 @@ int main() {
     cout << "Checking whether the results agree" << endl;
     // Now compare the results
     for (int i = 0; i < n; i++) {
-        if( abs(ndinterp_results_pdf[i]-lhapdf_results_pdf[i])/ndinterp_results_pdf[i] > 1e-2 ) {
-            cout << "Error for q=" << q2vals_pdf[i] << " x=" << xvals_pdf[i] << endl;
-            cout << "     LHA: " << lhapdf_results_pdf[i] << " ndinterp: " << ndinterp_results_pdf[i] << endl;
+        if( abs(ndinterp_results_pdf[i]-lhapdf_results_pdf[i])/ndinterp_results_pdf[i] > 4e-3 ) {
+            if (VERBOSE) {
+                cout << "Error for q=" << q2vals_pdf[i] << " x=" << xvals_pdf[i] << endl;
+                cout << "     LHA: " << lhapdf_results_pdf[i] << " ndinterp: " << ndinterp_results_pdf[i] << endl;
+            }
             ifail = true;
         }
     }

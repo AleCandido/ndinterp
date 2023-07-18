@@ -83,7 +83,7 @@ impl<D: Dimension> Grid<D> {
                 return Err(InterpolationError::ExtrapolationBelow(query));
             }
 
-            let u_idx = igrid.partition_point(|&x| x < query);
+            let u_idx = igrid.partition_point(|x| x < &query);
             *r = u_idx - 1;
         }
         Ok(ret)

@@ -6,7 +6,8 @@
 use crate::grid::{Grid, GridSlice};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
-use ndarray::{Axis, Dimension, Ix1, Ix2};
+use itertools::izip;
+use ndarray::{Axis, Dimension, Ix1, Ix2, Slice};
 
 /// Cubic interpolation
 #[derive(Debug)]
@@ -40,7 +41,7 @@ impl<'a> GridSlice<'a> {
     /// Takes as input the value being queried and its index within the given slice
 
     /// Perform 1d cubic interpolation such that f(x) = y
-    fn cubic_interpolate_1d(&'a self, query: f64, idx: usize) -> Result<f64, InterpolationError> {
+    fn cubic_interpolate_1d(&'a self, query: f64, idx: usize) -> f64 {
         // grid slice utilities are expected to be called multipled times for the same
         // query and so it is convient to pass idx from the outside to avoid expensive searches
         let dx = self.x[idx + 1] - self.x[idx];
@@ -63,7 +64,7 @@ impl<'a> GridSlice<'a> {
 
         let t = (query - self.x[idx]) / dx;
 
-        Ok(cubic_interpolation_1d(t, yl, yu, dydxl, dydxu))
+        cubic_interpolation_1d(t, yl, yu, dydxl, dydxu)
     }
 }
 
@@ -86,7 +87,7 @@ impl Interpolator<f64> for Cubic<Ix1> {
             y: self.grid.values.view(),
         };
 
-        grid_sl.cubic_interpolate_1d(query, idx)
+        Ok(grid_sl.cubic_interpolate_1d(query, idx))
     }
 }
 
@@ -101,46 +102,37 @@ impl Interpolator<&[f64]> for Cubic<Ix2> {
         let id_x2 = raw_idx[1];
         let x1_grid = &self.grid.xgrid[0];
         let x2_grid = &self.grid.xgrid[1];
-        let yvals = &self.grid.values;
+        let yvals = self
+            .grid
+            .values
+            .slice_axis(Axis(1), Slice::from((id_x2 - 1)..(id_x2 + 3)));
 
         // First interpolate in x1 by taken the nodes around the x2 index
         // Create slices in x1 for values in x2 at (i+2, i+1, <query>, i, i-1)
-        let slice_x1_m2 = GridSlice {
-            x: x1_grid,
-            y: yvals.index_axis(Axis(1), id_x2 - 1),
-        };
-        let slice_x1_m1 = GridSlice {
-            x: x1_grid,
-            y: yvals.index_axis(Axis(1), id_x2),
-        };
-        let slice_x1_p1 = GridSlice {
-            x: x1_grid,
-            y: yvals.index_axis(Axis(1), id_x2 + 1),
-        };
-        let slice_x1_p2 = GridSlice {
-            x: x1_grid,
-            y: yvals.index_axis(Axis(1), id_x2 + 2),
-        };
+        let mut vs = [0.0; 4];
 
-        let vm2 = slice_x1_m2.cubic_interpolate_1d(x1, id_x1)?;
-        let vm1 = slice_x1_m1.cubic_interpolate_1d(x1, id_x1)?;
-        let vp1 = slice_x1_p1.cubic_interpolate_1d(x1, id_x1)?;
-        let vp2 = slice_x1_p2.cubic_interpolate_1d(x1, id_x1)?;
+        for (v, yarr) in izip!(&mut vs, yvals.axis_iter(Axis(1))) {
+            *v = GridSlice {
+                x: x1_grid,
+                y: yarr.reborrow(),
+            }
+            .cubic_interpolate_1d(x1, id_x1);
+        }
 
         // Now perform the interpolation in x2
         let dx2_0 = x2_grid[id_x2] - x2_grid[id_x2 - 1];
         let dx2_1 = x2_grid[id_x2 + 1] - x2_grid[id_x2];
         let dx2_2 = x2_grid[id_x2 + 2] - x2_grid[id_x2 + 1];
 
-        let lower_derivative = 0.5 * ((vp1 - vm1) + (vm1 - vm2) * dx2_1 / dx2_0);
-        let upper_derivative = 0.5 * ((vp1 - vm1) + (vp2 - vp1) * dx2_1 / dx2_2);
+        let lower_derivative = 0.5 * ((vs[2] - vs[1]) + (vs[1] - vs[0]) * dx2_1 / dx2_0);
+        let upper_derivative = 0.5 * ((vs[2] - vs[1]) + (vs[3] - vs[2]) * dx2_1 / dx2_2);
 
         let t = (x2 - x2_grid[id_x2]) / dx2_1;
 
         Ok(cubic_interpolation_1d(
             t,
-            vm1,
-            vp1,
+            vs[1],
+            vs[2],
             lower_derivative,
             upper_derivative,
         ))
