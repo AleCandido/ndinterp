@@ -94,10 +94,7 @@ where
 {
     /// Find the index of the last value in the input xgrid such that xgrid(idx) < query
     /// If the query is outside the grid returns an extrapolation error
-    pub fn closest_below(
-        &self,
-        input_query: &[f64],
-    ) -> Result<[usize; D], InterpolationError> {
+    pub fn closest_below(&self, input_query: &[f64]) -> Result<[usize; D], InterpolationError> {
         let mut ret = [0; D];
 
         for (r, &query, igrid) in izip!(&mut ret, input_query, &self.xgrid) {
