@@ -82,7 +82,7 @@ impl Interpolator<f64> for Cubic<1> {
     /// Two special are considered, when the interpolation occurs between the first (last) two
     /// bins, the derivative at the boundary is approximated by the forward (backward) difference
     fn interpolate(&self, query: f64) -> Result<f64, InterpolationError> {
-        let raw_idx = self.grid.closest_below::<1>(&[query])?;
+        let raw_idx = self.grid.closest_below(&[query])?;
         let idx = raw_idx[0];
 
         let grid_sl = GridSlice {
@@ -97,7 +97,7 @@ impl Interpolator<f64> for Cubic<1> {
 impl Interpolator<&[f64]> for Cubic<2> {
     /// Use Cubic interpolation 2d to compute y(x1, x2)
     fn interpolate(&self, query: &[f64]) -> Result<f64, InterpolationError> {
-        let raw_idx = self.grid.closest_below::<2>(query)?;
+        let raw_idx = self.grid.closest_below(query)?;
 
         let x1 = query[0]; // x1 correspond to x in PDF interpolation
         let x2 = query[1];
