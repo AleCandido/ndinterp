@@ -11,7 +11,25 @@
 //!
 use crate::interpolate::InterpolationError;
 use itertools::izip;
-use ndarray::{Array, ArrayView1, Dimension};
+use ndarray::{Array, ArrayView1, Dimension, Ix1, Ix2};
+
+/// Together with the trait [`ToDimension`] this struct allows to convert a `usize` into a
+/// `Dimension` from the `ndarray` crate.
+pub struct DimensionHelper<const D: usize>;
+
+/// See documentation of [`DimensionHelper`].
+pub trait ToDimension {
+    /// A `Dimension` type from the `ndarray` crate.
+    type Dim: Dimension;
+}
+
+impl ToDimension for DimensionHelper<1> {
+    type Dim = Ix1;
+}
+
+impl ToDimension for DimensionHelper<2> {
+    type Dim = Ix2;
+}
 
 // Make public the families of interpolation algorithms implemented for grids
 pub mod cubic;
@@ -20,12 +38,15 @@ pub mod cubic;
 ///     A d-dimensional vector of 1-dimensional sorted vectors for the input points
 ///     A d-dimensional array for the grid values of
 #[derive(Debug)]
-pub struct Grid<D: Dimension> {
+pub struct Grid<const D: usize>
+where
+    DimensionHelper<D>: ToDimension,
+{
     /// Arrays with the input vectors (x_i)
     pub xgrid: Vec<Vec<f64>>,
 
     /// Output points
-    pub values: Array<f64, D>,
+    pub values: Array<f64, <DimensionHelper<D> as ToDimension>::Dim>,
 }
 
 /// A grid slice is always 1-Dimensional
@@ -67,7 +88,10 @@ impl<'a> GridSlice<'a> {
     }
 }
 
-impl<D: Dimension> Grid<D> {
+impl<const D: usize> Grid<D>
+where
+    DimensionHelper<D>: ToDimension,
+{
     /// Find the index of the last value in the input xgrid such that xgrid(idx) < query
     /// If the query is outside the grid returns an extrapolation error
     pub fn closest_below<const N: usize>(
@@ -93,9 +117,9 @@ impl<D: Dimension> Grid<D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{array, Ix1};
+    use ndarray::array;
 
-    fn gen_grid() -> Grid<Ix1> {
+    fn gen_grid() -> Grid<1> {
         let x = vec![vec![0., 1., 2., 3., 4.]];
         let y = array![4., 3., 2., 1., 1.];
 

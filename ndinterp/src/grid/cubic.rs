@@ -3,15 +3,18 @@
 //! These are the algorithms used by the LHAPDF library for `alpha_s` and pdf(x, q)
 //!
 
-use crate::grid::{Grid, GridSlice};
+use crate::grid::{DimensionHelper, Grid, GridSlice, ToDimension};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
 use itertools::izip;
-use ndarray::{Axis, Dimension, Ix1, Ix2, Slice};
+use ndarray::{Axis, Slice};
 
 /// Cubic interpolation
 #[derive(Debug)]
-pub struct Cubic<D: Dimension> {
+pub struct Cubic<const D: usize>
+where
+    DimensionHelper<D>: ToDimension,
+{
     /// The grid object contains all necessary information to perform the interpolation
     pub grid: Grid<D>,
 }
@@ -68,7 +71,7 @@ impl<'a> GridSlice<'a> {
     }
 }
 
-impl Interpolator<f64> for Cubic<Ix1> {
+impl Interpolator<f64> for Cubic<1> {
     /// Use Cubic interpolation 1d to compute y(query)
     /// The interpolation uses the two nearest neighbours and their derivatives computed as an
     /// average of the differences above and below.
@@ -91,7 +94,7 @@ impl Interpolator<f64> for Cubic<Ix1> {
     }
 }
 
-impl Interpolator<&[f64]> for Cubic<Ix2> {
+impl Interpolator<&[f64]> for Cubic<2> {
     /// Use Cubic interpolation 2d to compute y(x1, x2)
     fn interpolate(&self, query: &[f64]) -> Result<f64, InterpolationError> {
         let raw_idx = self.grid.closest_below::<2>(query)?;

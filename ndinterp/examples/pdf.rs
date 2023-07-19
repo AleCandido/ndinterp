@@ -84,7 +84,7 @@ fn main() {
 
     let xgrid = vec![logxs.to_vec(), logq2.to_vec()];
 
-    let grid = Grid {
+    let grid = Grid::<2> {
         xgrid,
         values: grid,
     };

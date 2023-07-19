@@ -4,14 +4,14 @@
 
 use core::slice;
 
-use ndarray::{ArrayView1, Ix1, Ix2};
+use ndarray::ArrayView1;
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
 
 /// Cubic1d interpolator
-pub struct Cubic1d(grid::cubic::Cubic<Ix1>);
+pub struct Cubic1d(grid::cubic::Cubic<1>);
 /// Cubic2d interpolator
-pub struct Cubic2d(grid::cubic::Cubic<Ix2>);
+pub struct Cubic2d(grid::cubic::Cubic<2>);
 
 /// Creates a Cubic1d interpolator given the nodes
 /// and the values of the function in said nodes
