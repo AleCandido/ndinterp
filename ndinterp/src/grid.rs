@@ -10,19 +10,34 @@
 //!     y = f(x1, x2, x3...)
 //!
 use crate::interpolate::InterpolationError;
-use ndarray::Array1;
+use itertools::izip;
+use ndarray::{Array, ArrayView1, Dimension};
 
 // Make public the families of interpolation algorithms implemented for grids
 pub mod cubic;
 
+/// A grid is made of two components:
+///     A d-dimensional vector of 1-dimensional sorted vectors for the input points
+///     A d-dimensional array for the grid values of
 #[derive(Debug)]
-pub struct Grid {
-    /// A grid is made of two (1-dimensional) sorted arrays.
-    pub input: Array1<f64>,
-    pub values: Array1<f64>,
+pub struct Grid<D: Dimension> {
+    /// Arrays with the input vectors (x_i)
+    pub xgrid: Vec<Vec<f64>>,
+
+    /// Output points
+    pub values: Array<f64, D>,
 }
 
-impl Grid {
+/// A grid slice is always 1-Dimensional
+#[derive(Debug)]
+pub struct GridSlice<'a> {
+    /// A reference to one of the input vectors of the grid
+    pub x: &'a Vec<f64>,
+    /// A view of the slice of values corresponding to x
+    pub y: ArrayView1<'a, f64>,
+}
+
+impl<'a> GridSlice<'a> {
     // TODO: at the moment we are using here the derivatives that LHAPDF is using for the
     // interpolation in alpha_s, these are probably enough for this use case but not in general
     // - [ ] Implement a more robust form of the derivative
@@ -33,9 +48,9 @@ impl Grid {
     /// input at position index as the ratio between the differences dy/dx computed as:
     ///     dy = y_{i} - y_{i-1}
     ///     dx = x_{i} - x_{x-1}
-    pub fn derivative_at(&self, index: usize) -> f64 {
-        let dx = self.input[index] - self.input[index - 1];
-        let dy = self.values[index] - self.values[index - 1];
+    pub fn derivative_at(&'a self, index: usize) -> f64 {
+        let dx = self.x[index] - self.x[index - 1];
+        let dy = self.y[index] - self.y[index - 1];
         dy / dx
     }
 
@@ -44,53 +59,66 @@ impl Grid {
     ///
     /// Dx_{i} = \Delta x_{i} = x_{i} - x_{i-}
     /// y'_{i} = 1/2 * ( (y_{i+1}-y_{i})/Dx_{i+1} + (y_{i}-y_{i-1})/Dx_{i} )
-    pub fn central_derivative_at(&self, index: usize) -> f64 {
+    pub fn central_derivative_at(&'a self, index: usize) -> f64 {
         let dy_f = self.derivative_at(index + 1);
         let dy_b = self.derivative_at(index);
         0.5 * (dy_f + dy_b)
     }
+}
 
-    /// Find the index of the last value in the input such that input(idx) < query
+impl<D: Dimension> Grid<D> {
+    /// Find the index of the last value in the input xgrid such that xgrid(idx) < query
     /// If the query is outside the grid returns an extrapolation error
-    pub fn closest_below(&self, query: f64) -> Result<usize, InterpolationError> {
-        if query > self.input[self.input.len() - 1] {
-            Err(InterpolationError::ExtrapolationAbove(query))
-        } else if query < self.input[0] {
-            Err(InterpolationError::ExtrapolationBelow(query))
-        } else {
-            let u_idx = self.input.iter().position(|x| x > &query).unwrap();
-            let idx = u_idx - 1;
-            Ok(idx)
+    pub fn closest_below<const N: usize>(
+        &self,
+        input_query: &[f64],
+    ) -> Result<[usize; N], InterpolationError> {
+        let mut ret = [0; N];
+
+        for (r, &query, igrid) in izip!(&mut ret, input_query, &self.xgrid) {
+            if query > *igrid.last().unwrap() {
+                return Err(InterpolationError::ExtrapolationAbove(query));
+            } else if query < igrid[0] {
+                return Err(InterpolationError::ExtrapolationBelow(query));
+            }
+
+            let u_idx = igrid.partition_point(|&x| x < query);
+            *r = u_idx - 1;
         }
+        Ok(ret)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ndarray::{array, Ix1};
 
-    fn gen_grid() -> Grid {
-        let x = array![0., 1., 2., 3., 4.];
+    fn gen_grid() -> Grid<Ix1> {
+        let x = vec![vec![0., 1., 2., 3., 4.]];
         let y = array![4., 3., 2., 1., 1.];
-        let grid = Grid {
-            input: x,
+
+        Grid {
+            xgrid: x,
             values: y,
-        };
-        grid
+        }
     }
 
     #[test]
     fn check_derivative() {
         let grid = gen_grid();
-        assert_eq!(grid.central_derivative_at(1), -1.);
-        assert_eq!(grid.central_derivative_at(3), -0.5);
+        let grid_slice = GridSlice {
+            x: &grid.xgrid[0],
+            y: grid.values.view(),
+        };
+        assert_eq!(grid_slice.central_derivative_at(1), -1.);
+        assert_eq!(grid_slice.central_derivative_at(3), -0.5);
     }
 
     #[test]
     fn check_index_search() {
         let grid = gen_grid();
-        assert_eq!(grid.closest_below(0.5).unwrap(), 0);
-        assert_eq!(grid.closest_below(3.2).unwrap(), 3);
+        assert_eq!(grid.closest_below::<1>(&[0.5]).unwrap()[0], 0);
+        assert_eq!(grid.closest_below::<1>(&[3.2]).unwrap()[0], 3);
     }
 }

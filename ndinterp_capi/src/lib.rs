@@ -1,11 +1,14 @@
-#![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
+//! C interface for ndinterp
+#![warn(clippy::all, clippy::cargo)]
 #![warn(missing_docs)]
 
+use core::slice;
+
 use ndarray::ArrayView1;
-/// C interface for ndinterp
 use ndinterp::grid;
 use ndinterp::interpolate::Interpolator;
 
+/// cubic1d inteprolator
 pub struct Cubic1d;
 
 /// Creates a cubic1d interpolator given the nodes
@@ -13,19 +16,22 @@ pub struct Cubic1d;
 ///
 /// # Safety
 ///
-/// This function is only safe to call as long as `input_c` and `values_c` are arrays with sizes
+/// This function is only safe to call as long as `xgrid_c` and `values_c` are arrays with sizes
 /// larger or equal to `size`.
 #[no_mangle]
 pub unsafe extern "C" fn create_cubic_interpolator1d(
-    input_c: *const f64,
+    xgrid_c: *const f64,
     values_c: *const f64,
     size: usize,
 ) -> Box<grid::cubic::Cubic1d> {
-    let input = ArrayView1::from_shape_ptr(size, input_c);
+    // Use slice instead of vec, so that rust doesn't release the memory coming from C++
+    let slice_input = unsafe { slice::from_raw_parts(xgrid_c, size) };
+    // Make a copy of the data into a vector (of vectors) for rust to own
+    let xgrid = vec![slice_input.to_vec()];
     let values = ArrayView1::from_shape_ptr(size, values_c);
 
     let grid = grid::Grid {
-        input: input.into_owned(),
+        xgrid,
         values: values.into_owned(),
     };
     let cubic_interpolator = grid::cubic::Cubic1d { grid };

@@ -3,3 +3,11 @@ members = ["ndinterp", "ndinterp_capi"] # "ndinterp_py"]
 
 [profile.release]
 lto = true
+
+[workspace.package]
+authors = ["Alessandro Candido <alessandro.candido@sns.it>", "Juan Cruz-Martinez <juacrumar@lairen.eu>", "Christopher Schwan <handgranaten-herbert@posteo.de>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/AleCandido/ndinterp"
+categories = ["science"]
+description = "N-dimensional interpolation library"

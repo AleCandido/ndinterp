@@ -1,14 +1,21 @@
 [package]
 name = "ndinterp_capi"
 version = "0.0.1"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+categories.workspace = true
+readme = "README.md"
+description = "C bindings for ndinterp"
+keywords = ["math", "science"]
 
 [dependencies]
 ndarray = "0.15.4"
 ndinterp = { path = "../ndinterp/" }
 
 [lib]
-name = "ndinterp"
+name = "ndinterp_capi"
 crate-type = ["cdylib"]
 
 [features]
