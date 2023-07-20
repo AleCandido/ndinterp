@@ -7,7 +7,6 @@ use crate::grid::{DimensionHelper, Grid, GridSlice, ToDimension};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
 use itertools::izip;
-use ndarray::Axis;
 
 /// Cubic interpolation
 #[derive(Debug)]
@@ -85,17 +84,18 @@ impl Interpolator<f64> for Cubic<1> {
         let raw_idx = self.grid.closest_below(&[query])?;
         let idx = raw_idx[0];
 
-        let grid_sl = GridSlice {
-            x: &self.grid.xgrid[0],
-            y: self.grid.values.view(),
-        };
-
-        Ok(grid_sl.cubic_interpolate_1d(query, idx))
+        Ok(self
+            .grid
+            .grid1d_to_slice1d()
+            .cubic_interpolate_1d(query, idx))
     }
 }
 
 impl Interpolator<&[f64]> for Cubic<2> {
-    /// Use Cubic interpolation 2d to compute y(x1, x2)
+    /// Use Cubic interpolation 2d to compute y([x1, x2])
+    ///
+    /// The interpolation uses the two nearest neighbours in both dimensions
+    /// and their derivatives computed as an average of the differences above and below.
     fn interpolate(&self, query: &[f64]) -> Result<f64, InterpolationError> {
         let raw_idx = self.grid.closest_below(query)?;
 
@@ -103,22 +103,19 @@ impl Interpolator<&[f64]> for Cubic<2> {
         let x2 = query[1];
         let id_x1 = raw_idx[0];
         let id_x2 = raw_idx[1];
-        let x1_grid = &self.grid.xgrid[0];
-        let x2_grid = &self.grid.xgrid[1];
-        let yvals = &self.grid.values;
 
         // First interpolate in x1 by taken the nodes around the x2 index
         // Create slices in x1 for values in x2 at (i+2, i+1, <query>, i, i-1)
         let mut vs = [0.0; 4];
         for (v, i) in izip!(&mut vs, (id_x2 - 1)..(id_x2 + 3)) {
-            *v = GridSlice {
-                x: x1_grid,
-                y: yvals.index_axis(Axis(1), i),
-            }
-            .cubic_interpolate_1d(x1, id_x1);
+            *v = self
+                .grid
+                .grid2d_to_slice1d(0, i)
+                .cubic_interpolate_1d(x1, id_x1);
         }
 
         // Now perform the interpolation in x2
+        let x2_grid = &self.grid.xgrid[1];
         let dx2_0 = x2_grid[id_x2] - x2_grid[id_x2 - 1];
         let dx2_1 = x2_grid[id_x2 + 1] - x2_grid[id_x2];
         let dx2_2 = x2_grid[id_x2 + 2] - x2_grid[id_x2 + 1];

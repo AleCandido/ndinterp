@@ -11,7 +11,7 @@
 //!
 use crate::interpolate::InterpolationError;
 use itertools::izip;
-use ndarray::{Array, ArrayView1, Dimension, Ix1, Ix2};
+use ndarray::{Array, ArrayView1, Axis, Dimension, Ix1, Ix2};
 
 /// Together with the trait [`ToDimension`] this struct allows to convert a `usize` into a
 /// `Dimension` from the `ndarray` crate.
@@ -85,6 +85,27 @@ impl<'a> GridSlice<'a> {
         let dy_f = self.derivative_at(index + 1);
         let dy_b = self.derivative_at(index);
         0.5 * (dy_f + dy_b)
+    }
+}
+
+impl Grid<1> {
+    /// Returns the 1d grid as a GridSlice object
+    pub fn grid1d_to_slice1d(&self) -> GridSlice {
+        GridSlice {
+            x: &self.xgrid[0],
+            y: self.values.view(),
+        }
+    }
+}
+
+impl Grid<2> {
+    /// Slice the grid along the given axis at position idx
+    pub fn grid2d_to_slice1d(&self, axis: usize, idx: usize) -> GridSlice {
+        let axout = (axis + 1) % 2;
+        GridSlice {
+            x: &self.xgrid[axis],
+            y: self.values.index_axis(Axis(axout), idx),
+        }
     }
 }
 
