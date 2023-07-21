@@ -52,14 +52,21 @@ where
 /// A grid slice is always 1-Dimensional
 /// and it is made of the x and y values such that f(x) = y
 #[derive(Debug)]
-pub struct GridSlice<'a> {
+pub(crate) struct GridSlice<'a> {
     /// A reference to one of the input vectors of the grid
     pub x: &'a Vec<f64>,
     /// A view of the slice of values corresponding to x
     pub y: ArrayView1<'a, f64>,
 }
 
-impl<'a> GridSlice<'a> {
+pub(crate) trait Derivatives<'a> {
+    /// Numerical derivative at index i with respect to the previous know
+    fn derivative_at(&'a self, index: usize) -> f64;
+    /// Numerical derivative at index i averaged above and below
+    fn central_derivative_at(&'a self, index: usize) -> f64;
+}
+
+impl<'a> Derivatives<'a> for GridSlice<'a> {
     // TODO: at the moment we are using here the derivatives that LHAPDF is using for the
     // interpolation in alpha_s, these are probably enough for this use case but not in general
     // - [ ] Implement a more robust form of the derivative
@@ -70,7 +77,7 @@ impl<'a> GridSlice<'a> {
     /// input at position index as the ratio between the differences dy/dx computed as:
     ///     dy = y_{i} - y_{i-1}
     ///     dx = x_{i} - x_{x-1}
-    pub fn derivative_at(&'a self, index: usize) -> f64 {
+    fn derivative_at(&'a self, index: usize) -> f64 {
         let dx = self.x[index] - self.x[index - 1];
         let dy = self.y[index] - self.y[index - 1];
         dy / dx
@@ -81,7 +88,7 @@ impl<'a> GridSlice<'a> {
     ///
     /// Dx_{i} = \Delta x_{i} = x_{i} - x_{i-}
     /// y'_{i} = 1/2 * ( (y_{i+1}-y_{i})/Dx_{i+1} + (y_{i}-y_{i-1})/Dx_{i} )
-    pub fn central_derivative_at(&'a self, index: usize) -> f64 {
+    fn central_derivative_at(&'a self, index: usize) -> f64 {
         let dy_f = self.derivative_at(index + 1);
         let dy_b = self.derivative_at(index);
         0.5 * (dy_f + dy_b)
@@ -90,7 +97,7 @@ impl<'a> GridSlice<'a> {
 
 impl Grid<1> {
     /// Returns the 1d grid as a GridSlice object
-    pub fn grid1d_to_slice1d(&self) -> GridSlice {
+    pub(crate) fn grid1d_to_slice1d(&self) -> GridSlice {
         GridSlice {
             x: &self.xgrid[0],
             y: self.values.view(),
@@ -100,7 +107,7 @@ impl Grid<1> {
 
 impl Grid<2> {
     /// Slice the grid along the given axis at position idx
-    pub fn grid2d_to_slice1d(&self, axis: usize, idx: usize) -> GridSlice {
+    pub(crate) fn grid2d_to_slice1d(&self, axis: usize, idx: usize) -> GridSlice {
         let axout = (axis + 1) % 2;
         GridSlice {
             x: &self.xgrid[axis],
