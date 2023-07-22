@@ -3,7 +3,7 @@
 //! These are the algorithms used by the LHAPDF library for `alpha_s` and pdf(x, q)
 //!
 
-use crate::grid::{Derivatives, DimensionHelper, Grid, GridSlice, ToDimension};
+use crate::grid::{DimensionHelper, Grid, GridSlice, ToDimension};
 use crate::interpolate::InterpolationError;
 pub use crate::interpolate::Interpolator;
 use itertools::izip;

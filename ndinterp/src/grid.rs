@@ -66,7 +66,7 @@ pub(crate) trait Derivatives<'a> {
     fn central_derivative_at(&'a self, index: usize) -> f64;
 }
 
-impl<'a> Derivatives<'a> for GridSlice<'a> {
+impl<'a> GridSlice<'a> {
     // TODO: at the moment we are using here the derivatives that LHAPDF is using for the
     // interpolation in alpha_s, these are probably enough for this use case but not in general
     // - [ ] Implement a more robust form of the derivative
