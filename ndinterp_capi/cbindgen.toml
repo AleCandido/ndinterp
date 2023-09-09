@@ -12,3 +12,4 @@ cpp_compat = true
 
 [export.rename]
 "Cubic1d" = "cubic1d"
+"Cubic2d" = "cubic2d"
